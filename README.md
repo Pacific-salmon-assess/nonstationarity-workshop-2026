@@ -14,7 +14,7 @@ install.packages("remotes")
 remotes::install_git('https://github.com/Pacific-salmon-assess/samEst')
 ```
 
-Note, that due to the size of the TMB models, that installation may take some time (upwards of 15-20 mins) to complete. If there are issues with installation prior to the workshop, feel free to contact Dan (dan.greenberg[at]dfo-mpo.gc.ca). Note that the package and dependencies were built on R v4.3.2.
+Note, that due to the size of the TMB models, that installation may take some time (upwards of 15-20 mins) to complete. If there are issues with installation prior to the workshop, feel free to contact Dan (dan.greenberg[at]dfo-mpo.gc.ca). Note that the package and dependencies were built on R v4.3.2 - but was tested on R v.4.5.2 for compatibility - older versions may cause issues
 
 There will be two main exercises in the workshop, interspersed with discussion and presentations. For each exercise we include an Rmarkdown file, where participants can edit the code chunks, and alternatively a pure R script, depending on user preferences. Each folder contains the scripts for each exercise.
 
