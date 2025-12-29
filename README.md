@@ -1,4 +1,4 @@
-Materials for the 'Nonstationary spawner-recruitment dynamics for Pacific salmon workshop', February 13, 2026 - 8:30am to 3:30pm - Hyatt Regency Vancouver (Room TBA), Vancouver, BC, Canada.
+**Materials for the 'Nonstationary spawner-recruitment dynamics for Pacific salmon workshop', February 13, 2026 - 8:30am to 3:30pm - Hyatt Regency Vancouver (Room TBA), Vancouver, BC, Canada.**
 
 Lead: Dan Greenberg (Fisheries and Oceans Canada - Pacific)
 
@@ -18,13 +18,13 @@ Note, that due to the size of the TMB models, that installation may take some ti
 
 There will be two main exercises in the workshop, interspersed with discussion and presentations. For each exercise we include an Rmarkdown file, where participants can edit the code chunks, and alternatively a pure R script, depending on user preferences. Each folder contains the scripts for each exercise.
 
-md Exercise 1: Fitting and assessing nonstationary spawner-recruit models
+Exercise 1: Fitting and assessing nonstationary spawner-recruit models
   1. continuous (random walk) vs. regime shift (hidden markov) models
   2. empirical examples
   3. simulation testing
   4. model selection
 
-md Exercise 2: Time-varying reference points and management strategy evaluation
+Exercise 2: Time-varying reference points and management strategy evaluation
   1. time-varying Smsy and Umsy
   2. harvest control rules with 'static' vs. time-varying benchmarks
   3. assessing management outcomes and trade-offs
