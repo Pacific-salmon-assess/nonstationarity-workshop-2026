@@ -1,0 +1,172 @@
+---
+title: 'Exercise 1: Assessing nonstationarity in spawner-recruit dynamics'
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+# Overview
+
+The following exercises are intended to give participants a broad understanding of the statistical nuances of estimating nonstationarity in spawner-recruit time-series, with practical applications using the *samEst* package. You may choose to 'knit' this document to an HTML file, for visualization - or simply read through the text here. We encourage you to modify the R code chunks to experiment with each section.
+
+# Forms of non-stationarity, and its alternatives
+
+Non-stationarity in the context of spawner-recruit dynamics refers to system parameters (ie. max. recruitment, $log(\alpha)$, density-dependence, $\beta$ or $S_{max}$, or even recruitment variability, $\sigma$) that change through time rather than act as static or stable parameters that govern system dynamics.
+
+To start let's consider the standard Ricker logistic model of population dynamics:
+
+$R_t = S_t \cdot e^{\alpha - \beta \cdot S_t + \epsilon_t}$
+
+$\epsilon_t \sim N(0, \sigma)$
+
+Where $R_t$ is the abundance of adult recruits for brood cohort at year $t$, $S_t$ is the parent spawning abundance in brood cohort year $t$, $\alpha$ is the intrinsic productivity representing maximum adult recruit produced per spawning parent (at theoretical $S_t$ = 0, since it is an intercept), $\beta$ is the per-capita reduction in recruitment per spawning parent - and $S_{max}$ is the inverse of this quantity (representing the spawning abundance where total recruitment is maximized), $\epsilon_t$ is a normal deviate (but log-normal on the real scale of recruitment) representing deviance (or noise; represented by the scale or standard deviation parameter, \sigma) in the recruitment process for that brood cohort year from the system parameters expectation.
+
+This equation can be linearized, with some rearrangement of the terms, which is how we will fit this in practice - as it then becomes a standard linear regression, in terms of $log(R_t/S_t)$:
+
+$log(R_t/S_t) = log(\alpha) - S_t/S_{max} + \epsilon_t$
+
+Note that we have substituted $S_{max}$ for $\beta$ from the previous equation, because 1) $S_{max}$ is a biologically meaningful parameter and 2) this is the formulation used in *samEst*.
+
+Let's begin to explore this model with some real-world examples. Below you will find sections with numerous example datasets.
+
+## Stable (or static, or equilibrium) dynamics
+
+Let's begin by visualizing the sort of spawner-recruit time-series one may obtain from this model - when parameters are stable through time. We will do this through simulated data - we will use a Pink salmon life cycle, mostly for convenience as due to their fixed life history the recruits are equivalent to the run size in each year so we can ignore the added complexity of variable ages. In real-world data for most other species, the recruits by brood cohort must be back-calculated using run sizes (e.g. spawning abundance + total harvest abundance in a given year) and age distributions (ideally for each year - and separately for spawning and catch (and even perhaps more fine-scale to each fishery), in a perfect world).
+
+Feel free to adjust the parameters in the Ricker/simulation sections to see how it changes both the shape of the expected curve and the spawner-recruit series. To get a sense of some real-world distributions of the key parameters you can view some empirical distributions from a meta-analsyis of spawner-recruit dynamics here:
+
+
+```{r, static ricker simulation,fig.width=6,fig.height=8}
+#Ricker parameters
+log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative expect R/S)
+smax=5000 #this parameter can vary massively, from hundreds to millions
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+K = log.a*smax #carrying capacity, aka Seq (equilibrium spawners), the stable attraction point
+
+#simulation parameters
+N=50 #number of simulated years to the future
+L=N+2#total length, add 2 for +2 starting cohorts (max age of our simulated pink salmon) to seed the simulation
+U=runif(L,0.2,0.8) #harvest rate - uniformly drawn (you can change this but be careful of exceeding, 0-1 boundaries)
+#U=plogis(normal(L,0,0.5)) - alternative harvest rate protocol using a logit-transformed normal draw, less variable than above, can comment the above line with # and this off to switch 
+
+#simulation vectors
+logRS=numeric(L) #productivity, log(R/S), for each brood cohort
+S=numeric(L);S[1:2]=runif(2,K*0.5,K*1.5) #initial spawners, randomized between 0.5-1.5*K 
+R=numeric(L) #recruits in each year = run size
+
+#initialize for first 5 brood cohorts - need these to seed for the remaining vectors
+for(t in 3:L){
+  #for each year we will draw 1 normally distributed draw of logRS based on the expectation
+  #mean is equal to the expectation from the ricker model, S is staggered to 
+  #sigma generates the noise (ie. the epsilon_t)
+  logRS[t]=rnorm(1, mean=(log.a - S[t-2]/smax),sd=sigma)
+  R[t]=exp(logRS[t])*S[t-2] #transform to recruits by converting log(R/S) to R/S times spawners
+  S[t]=R[t]*(1-U[t]) #escapement in the future is run size (= recruit size) minus the harvest rate
+}
+#we now have to realign the time-series so they are in terms of brood cohorts (rather than calendar years), as R/logRS are staggered +2 from S, we achieve this by removing the first 2 observations of R/logRS, which are empty, and last 2 observations of S, which aren't associated with any recruitment data
+S=S[-((L-1):L)]
+R<-R[3:L]
+logRS<-logRS[3:L]
+
+#visualize your simulated time-series
+par(mfrow=c(2,1))
+plot(R~S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5)) #Spawner Recruit curve
+abline(c(0,1),lty=5) #1:1 line to indicate where recruits = spawners
+#expectation based on ricker parameters:
+S_p=seq(0,max(S))
+pred=exp(log.a-S_p/smax)*S_p
+lines(pred~S_p,lwd=2)
+plot(logRS~S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5)) #Spawner Recruit curve
+pred2=log.a-S_p/smax
+lines(pred2~S_p,lwd=2)
+
+```
+
+Here we can attempt two *samEst* functions that can estimate this model from the simulated spawner-recruit time-series.
+
+There are two forms for model fitting that we included in this package - one using *Template Model Builder* (*TMB*), which uses Laplace approximation of the marginal likelihood to estimate parameter values (i.e. maximum likelihood estimates, MLE), the other form is a Bayesian method using *Stan*. We won't get into great detail about all the nuances of the theory and practice of these two model forms, but the main point for their implmentation in *samEst* is that the former will give fast point estimates and has an option for no priors on the parameters, while the latter will give full posteriors where it's easier to work with the full uncertainty of the parameters and also requires priors on each parameter.
+
+For the stationary form of the Ricker model, the two functions are: *ricker_TMB* and *ricker_stan*. You can call up either function (e.g. *??ricker_TMB*) to see the available arguments.
+
+
+```{r, static ricker estimation, TMB,fig.width=6,fig.height=4}
+library(samEst)
+df=data.frame(S=S,logRS=logRS) #the data inputs for each function requires a data-frame or list with S = a vector of spawning abundances, and logRS = a vector of log(recruits/spawner)
+
+tmb.fit1=ricker_TMB(data=df)
+
+#We can view the MLE estimates of the key parameters by calling them up from the function:
+tmb.fit1$logalpha
+tmb.fit1$Smax
+tmb.fit1$sig
+
+#how do these compare to your true values?
+
+#compare the estimated curve to the true curve:
+plot(R~S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5)) #Spawner Recruit curve
+abline(c(0,1),lty=5) #1:1 line to indicate where recruits = spawners
+#expectation based on true ricker parameters:
+S_p=seq(0,max(S))
+pred=exp(log.a-S_p/smax)*S_p
+lines(pred~S_p,lwd=2)
+pred.est=exp(tmb.fit1$logalpha-S_p/tmb.fit1$Smax)*S_p
+lines(pred.est~S_p,col='darkred',lwd=2)
+
+```
+
+You may find the estimated vs. true Ricker curves are slightly off - but largely in the same realm. The more important aspect is whether the key biological reference points - e.g. spawners that maximize sustainable yield ($S_{msy}$) or the harvest rate at maximum sustainable yield ($U_{msy}$) - are close enough, as these are the management quantities that we're hoping to derive from these curves. These can be calculated directly from the Ricker parameters as:
+
+
+$S_{msy} = (1 - LambertW(e^{1-log(\alpha)}))/\beta$
+
+$U_{msy} = 1 - LambertW(e^{1-log(\alpha)})$
+
+In *samEst*, these can be implemented via *smsyCalc* and *umsyCalc*, but these are also standard outputs that are generated from the estimated functions (e.g. ricker_TMB).
+
+```{r, static ricker ref pt estimation, TMB}
+true.smsy=smsyCalc(log.a,b=1/smax)
+true.smsy #true smsy
+
+tmb.fit1$Smsy #estimated smsy
+
+true.umsy=umsyCalc(log.a)
+true.umsy
+
+tmb.fit1$umsy
+
+```
+
+The previous example is sort of idealized, in the sense that (beyond being a stable system) you as an analyst have perfect data - i.e. the estimates of recruits and spawners are known quantities - since we simulated them. In reality, sampling error in these quantities (i.e. in escapement estimates, catch, and age distributions) can be considerable. We can add in some simple white noise sampling error to see how this affects our recovery of the Ricker parameters.
+
+```{r, static ricker sampling error }
+#we can add some noise to each state variable to get closer to an observed quantity
+cv.r=0.25 #this sets the 'coefficient of variation', which is the standard deviation scaled to the mean
+cv.s=0.25
+R_obs=rnorm(length(R),R,cv.r*R)
+R_obs=ifelse(R_obs<0,1,R_obs) #in case you get negative values
+S_obs=rnorm(length(S),S,cv.s*S)
+S_obs=ifelse(S_obs<0,1,S_obs)
+
+logRS_obs=log(R_obs/S_obs)
+
+df2=data.frame(S=S_obs,logRS=logRS_obs)
+tmb.fit2=ricker_TMB(data=df2)
+
+plot(R~S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5)) #Spawner Recruit curve
+points(R_obs~S_obs,pch=21,bg=adjustcolor('darkred',alpha.f=0.5),col='transparent')
+abline(c(0,1),lty=5) #1:1 line to indicate where recruits = spawners
+#expectation based on true ricker parameters:
+S_p=seq(0,max(S))
+pred=exp(log.a-S_p/smax)*S_p
+lines(pred~S_p,lwd=2)
+pred.est=exp(tmb.fit2$logalpha-S_p/tmb.fit2$Smax)*S_p
+lines(pred.est~S_p,col='darkred',lwd=2)
+```
+Check how this may or may not change the key parameters and reference points in the estimated fit.
+
+
+## Stable, but autocorrelated, dynamics
+
+The previous example is the sort of idealized scenario one would hope for a real population - stable dynamics over a long period. So it produces (generally) accurate estimates.
