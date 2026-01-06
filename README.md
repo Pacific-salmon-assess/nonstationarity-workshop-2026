@@ -21,10 +21,11 @@ To run Bayesian models with [*Stan*](https://mc-stan.org/) (via [*rstan*](https:
 There will be two main exercises in the workshop, interspersed with discussion and presentations. For each exercise we include an Rmarkdown file, where participants can edit the code chunks, and alternatively a pure R script, depending on user preferences. Each folder contains the scripts for each exercise.
 
 Exercise 1: Fitting and assessing nonstationary spawner-recruit models
-  1. continuous (random walk) vs. regime shift (hidden markov) models
-  2. empirical examples
-  3. simulation testing
-  4. model selection
+  1. stable dynamics
+  2. stable, but autocorrelated, dynamics
+  3. non-stationary dynamics
+  4. regime shifts
+  5. empirical examples
 
 Exercise 2: Time-varying reference points and management strategy evaluation
   1. time-varying Smsy and Umsy
