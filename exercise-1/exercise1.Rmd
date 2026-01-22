@@ -211,6 +211,7 @@ abline(h=0,lty=5)
 points(df.ac$eps,pch=21,bg=viridis::viridis(length(df.ac$S)))
 
 ```
+
 Lets's compare this to the same system with no autocorrelation (note if you changed the ricker parameters in the previous section these will not be directly comparable, if not - re-run the previous section with equivalent Ricker parameters). Note 'eps' = $\epsilon_t$ = the residuals from the true parameters.
 
 ```{r, stable dynamics comp plot, fig.width=6,fig.height=8}
@@ -280,7 +281,6 @@ static_sr_plot(data=df.ac,mod=ac.fit.st,plot.params=TRUE)
 
 What differences do you find in the Ricker parameter estimates and residual plots for when you account for (or not) autocorrelation in the model?
 
-
 Will it detect any autocorrelation in the entirely stable dataset?
 
 ```{r, ac estimates 2}
@@ -335,6 +335,7 @@ model_weights(c(st.fit.ac$AICc,st.fit1$AICc),form='TMB')
 model_weights(c(st.fit.ac$BIC,st.fit1$BIC),form='TMB')
 
 ```
+
 ## Continuous change
 
 The key Ricker model parameters that dictate population dynamics emerge as the integration of several demographic processes - namely survival (at all life stages) and reproductive output. The intrinsic productivity parameter, $log(\alpha)$ represents the density-independent portion, while the capacity parameter $S_{max}$ represents the density-dependent portion. In nature, both of these processes may change through time in tandem with ecosystem conditions - e.g. abiotic environment, predator/prey/competitor abundances, habitat availability, etc. When these parameters shift through time, this results in 'nonstationary' population dynamics.
@@ -478,8 +479,9 @@ Similar to our example comparing autocorrelation and stable dynamics, perhaps we
 productivity scenario:
 
 ```{r, tv est - linear crossed mod sel - prod scenario}
-ns.prod.fit1$AICc #prod est matched to prod data
-ns.smax.fit2$AICc #smax est matched to prod data
+#tv-productivity generating data - tv productivity and tv smax fit
+c(ns.prod.fit1$AICc, #prod est matched to prod data
+ns.smax.fit2$AICc) #smax est matched to prod data
 
 #identifying prod vs capacity change in true productivity change
 model_weights(c(ns.prod.fit1$AICc,ns.smax.fit2$AICc),form='TMB')
@@ -488,8 +490,9 @@ model_weights(c(ns.prod.fit1$AICc,ns.smax.fit2$AICc),form='TMB')
 capacity scenario:
 
 ```{r, tv est - linear crossed mod sel - smax scenario}
-ns.prod.fit2$AICc #prod est matched to prod data
-ns.smax.fit1$AICc #smax est matched to prod data
+#tv-smax generating data - tv productivity and tv smax fit
+c(ns.prod.fit2$AICc, #prod est matched to prod data
+ns.smax.fit1$AICc) #smax est matched to prod data
 
 #identifying prod vs capacity change in true productivity change
 model_weights(c(ns.prod.fit2$AICc,ns.smax.fit1$AICc),form='TMB')
@@ -592,7 +595,7 @@ hmm.fit.b=ricker_hmm_TMB(data=df.reg.b,tv.par='both',k_regime=2,silent=T)
 hmm_sr_plot(data=df.reg.b,mod=hmm.fit.b)
 ```
 
-```{r, prod cap regime true vs estimated,fig.height=8,fig.width=6}
+```{r, prod cap regime true vs estimated,fig.height=9,fig.width=7}
 par(mfrow=c(2,1))
 plot(df.reg.b$loga.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$loga.t,hmm.fit.b$logalpha)),max(c(df.reg.b$loga.t,hmm.fit.b$logalpha))))
 lines(hmm.fit.b$logalpha[hmm.fit.b$regime],lwd=2,col='darkred')
