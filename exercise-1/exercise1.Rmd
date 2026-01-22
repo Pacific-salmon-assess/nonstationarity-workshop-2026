@@ -249,7 +249,7 @@ st.fit.ac=ricker_TMB(data=df.st,ac=TRUE,silent=T)
 st.fit.ac$rho
 ```
 
-There are a few ways to gauge whether autocorrelation in recruitment may exist, in part you can (after some practice) visualize it in the residuals, you can test the parameter with the two model forms as well. One way we could potentially discriminate between the two model forms is using model selection criteria, the *samEst* *TMB* model functions provide estimates of both the $AIC_c$ and $BIC$, which are estimated as:
+There are a few ways to gauge whether autocorrelation in recruitment may exist, in part you can (after some practice) visualize it in the residuals, you can test the parameter with the two model forms as well. One way we could potentially discriminate between the two model forms is using model selection criteria, which the *samEst* *TMB* model functions provide estimates of both the $AIC_c$ and $BIC$, which are estimated as:
 
 $AIC_c = -2log(L) + 2k(k+1)/(n-k-1)$
 $BIC = klog(n) - 2log(L)$
@@ -514,21 +514,46 @@ lines(hmm.fit.prod$logalpha[hmm.fit.prod$regime],lwd=2,col='darkred')
 
 ```
 
-Another way to visualize this is to multiply the probability of each regime by its expected parameter - this (often) ends up being conceptually similar to the random walk:
+Another way to visualize this is to multiply the probability of each regime by its expected parameter (in red) - this (often) ends up being conceptually similar to the random walk (in blue):
 
 ```{r, prod regime continuous}
 hmm.fit.prod$logalpha.t=hmm.fit.prod$logalpha%*%hmm.fit.prod$probregime
 
 rw.fit.reg=ricker_rw_TMB(data=df.reg.prod,tv.par='a',silent=T)
 
-plot(df.reg.prod$loga.t,type='l',lwd=2,ylim=c(min(c(df.reg.prod$loga.t,hmm.fit.prod$logalpha.t,rw.fit.reg$logalpha)),max(c(df.reg.prod$loga.t,hmm.fit.prod$logalpha.t,rw.fit.reg$logalpha))))
+plot(df.reg.prod$loga.t,type='l',lwd=2,ylim=c(min(c(df.reg.prod$loga.t,hmm.fit.prod$logalpha.t,rw.fit.reg$logalpha)),max(c(df.reg.prod$loga.t,hmm.fit.prod$logalpha.t,rw.fit.reg$logalpha))),ylab='productivity through time')
 lines(as.numeric(hmm.fit.prod$logalpha.t),lwd=2,col='darkred')
 lines(rw.fit.reg$logalpha,lwd=2,col='navy')
 ```
 
 What you probably will find is that estimates from models do not perfectly replicate the simulating dynamics - sometimes misidentifying the true regime or being a lagged indicator. Much of this emerges due to the stochastic nature of recruitment where it can struggle to differentiate noise from the underlying dynamics.
 
-# Model selection
+For the regime shift models, we can also allow both productivity and capacity to differ between regimes - allowing for a lot of flexibility. This could emerge when conditions shift in such a way that both density-dependent and -independent survival are affected.
+
+```{r, prod-cap regime hmm,fig.height=8,fig.width=6}
+#Ricker parameters
+log.a0=1.5 #initial productivity
+p.change=-0.5#proprtional change in productivity, -0.75 = -75% (on the log-scale), 0.5 = +50%
+smax0=5000 #initial smax
+p.change2=-0.5#proprtional change in capacity, -0.75 = -75% (on the log-scale), 0.5 = +50%
+
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+N=50
+
+df.reg.b=salmon_sim.tv(log.a0=log.a0,p.change=p.change,p.change2=p.change2,smax0=smax0,sigma=sigma,N=N,par='both',form='regime',reg.length=8)
+
+hmm.fit.b=ricker_hmm_TMB(data=df.reg.b,tv.par='both',k_regime=2,silent=T)
+
+hmm_sr_plot(data=df.reg.b,mod=hmm.fit.b)
+```
+
+```{r, prod cap regime true vs estimated,fig.height=8,fig.width=6}
+par(mfrow=c(2,1))
+plot(df.reg.b$loga.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$loga.t,hmm.fit.b$logalpha)),max(c(df.reg.b$loga.t,hmm.fit.b$logalpha))))
+lines(hmm.fit.b$logalpha[hmm.fit.b$regime],lwd=2,col='darkred')
+plot(df.reg.b$smax.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$smax.t,hmm.fit.b$Smax)),max(c(df.reg.b$smax.t,hmm.fit.b$Smax))))
+lines(hmm.fit.b$Smax[hmm.fit.b$regime],lwd=2,col='darkred')
+```
 
 # Empirical examples
 

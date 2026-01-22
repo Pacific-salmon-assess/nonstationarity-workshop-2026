@@ -124,7 +124,7 @@ salmon_sim=function(log.a,smax,sigma,N,form=c('static','autocorr'),rho=NA){
   return(df)
 }
 
-salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b'),p.change,form=c('linear','rw','regime'),reg.length=NULL){
+salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.change2,form=c('linear','rw','regime'),reg.length=NULL){
   
     #age structure
     #this accounts for different maturations as is typical for most salmon species
@@ -184,7 +184,13 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b'),p.change,form=c('line
         smax=rep(rep(c(smax0,smax0*(1+p.change)),each=reg.length),length.out=L)
       }
     } 
-    
+    if(par=='both'){
+      if(is.null(reg.length)==T){print('must specify regime length')}
+      smax=numeric(L)
+      log.a=numeric(L)
+      log.a=rep(rep(c(log.a0,log.a0*(1+p.change)),each=reg.length),length.out=L)
+      smax=rep(rep(c(smax0,smax0*(1+p.change2)),each=reg.length),length.out=L)
+      }
     #simulation vectors
     logRS=numeric(L) #productivity, log(R/S), for each brood cohort
     S=numeric(L);S[1:c(A)]=runif(A,K*0.1,K*1.25) #initial spawners, randomized between 0.5-1.5*K 
