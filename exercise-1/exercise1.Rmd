@@ -9,7 +9,7 @@ editor_options:
 
 # Overview
 
-The following exercises are intended to give participants a broad understanding of the statistical nuances of estimating nonstationarity in spawner-recruit time-series, with practical applications using the *samEst* package. You may choose to 'knit' this document to an HTML file, for visualization - or simply read through the text here. We encourage you to modify the R code chunks to experiment with each section.
+The following exercises are intended to give participants a broad understanding of the statistical nuances of estimating nonstationarity in spawner-recruit time-series, with practical applications using the *samEst* package. You may choose to 'knit' this document ('exercise1.Rmd') to an HTML file, for visualization - or simply read through the text here. We encourage you to modify the R code chunks to experiment with each section to explore the mechanics of the simulations and model testing.
 
 # Forms of non-stationarity, and its alternatives
 
@@ -35,7 +35,7 @@ Let's begin to explore this model with some real-world examples. Below you will 
 
 Let's begin by visualizing the sort of spawner-recruit time-series one may obtain from this model - when parameters are stable through time. We will do this through simulated data - we have made a function to simulate a generic Pacific salmon life cycle, in this case where fish return at ages 3, 4, or 5. We mimic the real world by creating annual run sizes from the total recruits spawned by each brood cohort, allow for harvest on the run (in this case, the harvest is just random irrespective of run size - but later we will allow for more realistic harvest control rules), and the 'escapement' of the run becomes the spawners for that year's brood cohort (and the cycle continues...).
 
-The simulation is governed by our familiar Ricker parameters ($log(\alpha)$,$S_{max}$,$\sigma$), as well as an option to change the time-series length ($N$). Feel free to alter these parameters and see the resulting changes to the simulated datasets. To get a sense of some real-world distributions of the key parameters you can view some empirical distributions from a meta-analsyis of spawner-recruit dynamics here:
+The simulation is governed by our familiar Ricker parameters ($log(\alpha)$, $S_{max}$, $\sigma$), as well as an option to change the time-series length ($N$). Feel free to alter these parameters and see the resulting changes to the simulated datasets. To get a sense of some real-world distributions of the key parameters you can view some empirical distributions from a meta-analsyis of spawner-recruit dynamics [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#2_Stock_parameters_-_static).
 
 ```{r, simulation functions,echo=FALSE}
 source('../exercise-1/sim_functions.R')
@@ -65,16 +65,16 @@ lines(pred2~S_p,lwd=2)
 
 
 ```
-Try changing the key Ricker parameters and note how the spawner-recruit curve shifts in kind.
 
+Try changing the key Ricker parameters and note how the spawner-recruit curve shifts in kind.
 
 We will use various *samEst* functions to estimate this model (and others) from the simulated spawner-recruit time-series.
 
-There are two forms for model fitting that we included in this package - one using *Template Model Builder* (*TMB*), which uses Laplace approximation of the marginal likelihood to estimate parameter values (i.e. maximum likelihood estimates, MLE), the other form is a Bayesian method using *Stan*. We won't get into great detail about all the nuances of the theory and practice of these two model forms, but the main point for their implmentation in *samEst* is that the former will give fast point estimates and has an option for no priors on the parameters, while the latter will give full posteriors where it's easier to work with the full uncertainty of the parameters and also requires priors on each parameter.
+There are two forms for model fitting that we included in this package - one using *Template Model Builder* (*TMB*), which uses Laplace approximation of the marginal likelihood to estimate parameter values (i.e. maximum likelihood estimates, MLE), the other form is a Bayesian method using *Stan*. We won't get into great detail about all the nuances of the theory and practice of these two model forms, but the main point for their implmentation in *samEst* is that the former will give fast point estimates and has an option for no priors on the parameters, while the latter will give full posterior distributions of parameter estimates - soit's easier to work with the full uncertainty of the parameters and also requires priors on each parameter.
 
 For the stationary form of the Ricker model, the two functions are: *ricker_TMB* and *ricker_stan*. You can call up either function (e.g. *??ricker_TMB*) to see the available arguments. For the rest of this exercise, we will use the *TMB* versions for speed and ease, you are welcome to switch these to *Stan* implementations, see the final section of advanced options for those interested.
 
-Fit the TMB estimate of the Ricker curve with *samEst*. Note that we will turn off priors on the parameters (you are welcome to experiment with turning them on to experiment with how this shapes outcomes however).
+Fit the *TMB* estimate of the Ricker curve with *samEst*.
 
 ```{r, static ricker estimation TMB,fig.width=6,fig.height=4}
 library(samEst)
@@ -87,21 +87,32 @@ st.fit1=ricker_TMB(data=df.st,silent=T)#note silent = T just surpresses the upda
 
 How do the estimates compare to the true values in the simulation?
 
-```{r, static estimates comp.}
+real vs. estimated $log(\alpha)$:
 
-#We can view the MLE estimates of the key parameters by calling them up from the function:
-log.a
-st.fit1$logalpha
-smax
-st.fit1$Smax
-sigma
-st.fit1$sigma
+```{r, static estimates loga}
+#We can view the MLE estimates of the key parameters by calling them up from the function
+c(log.a,st.fit1$logalpha)
 ```
+real vs. estimated $S_{max}$:
+
+```{r, static estimates smax}
+c(smax,
+st.fit1$Smax)
+
+```
+
+real vs. estimated $\sigma$:
+
+```{r, static estimates sigma}
+c(sigma,
+st.fit1$sigma)
+```
+
 Let's visualize the estimation prediction (red) compared to true (black):
 
 ```{r, static ricker estimation plot,fig.width=6,fig.height=4}
 #compare the estimated curve to the true curve:
-plot(df.st$R~df.st$S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5),xlim=c(0,max(df.st$S)),ylim=c(0,max(df.st$R))) #Spawner Recruit curve
+plot(df.st$R~df.st$S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5),xlim=c(0,max(df.st$S)),ylim=c(0,max(df.st$R)),xlab='spawners',ylab='recruits') #Spawner Recruit curve
 abline(c(0,1),lty=5) #1:1 line to indicate where recruits = spawners
 #expectation based on true ricker parameters:
 S_p=seq(0,max(df.st$S))
@@ -120,18 +131,40 @@ $U_{msy} = 1 - LambertW(e^{1-log(\alpha)})$
 
 In *samEst*, these can be implemented via *smsyCalc* and *umsyCalc*, which we will apply to our true known parameters - but these are also standard outputs that are generated from the estimated functions (e.g. *ricker_TMB*).
 
-```{r, static ricker ref pt estimation, TMB}
+$Smsy$:
+
+```{r, static est Smsy}
 true.smsy=smsyCalc(log.a,b=1/smax)
-true.smsy #true smsy
-
-st.fit1$Smsy #estimated smsy
-
-true.umsy=umsyCalc(log.a)
-true.umsy
-
-st.fit1$umsy
+c(true.smsy, st.fit1$Smsy) #true and estimated smsy
 
 ```
+
+$Umsy$:
+
+```{r, static est umsy}
+true.umsy=umsyCalc(log.a)
+c(true.umsy,st.fit1$Umsy)
+
+```
+Note that the default of *ricker_TMB* applies priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The $S_{max}$ prior is fairly informative, which we set as a default to a mean of half of the maximum observed spawner abundance and a standard deviation of double of that same quantity - drawn from a normal distribution. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
+
+In some cases, you may have strong priors derived from external information - e.g. watershed area, or some other estimate. You can set custom priors directly in this function (and others). Here we can see how that works and changes the previous estimate - prior function plotted in blue:
+
+```{r, stable with priors}
+st.fit2=ricker_TMB(data=df.st,silent=T,Smax_mean=10000,Smax_sd=500) #setting prior to be higher for Smax, with low variance
+
+plot(df.st$R~df.st$S,bty='l',pch=21,bg=adjustcolor('black',alpha.f=0.5),xlim=c(0,max(df.st$S)),ylim=c(0,max(df.st$R)),xlab='spawners',ylab='recruits') #Spawner Recruit curve
+abline(c(0,1),lty=5) #1:1 line to indicate where recruits = spawners
+#expectation based on true ricker parameters:
+S_p=seq(0,max(df.st$S))
+pred=exp(log.a-S_p/smax)*S_p
+lines(pred~S_p,lwd=2)
+pred.est1=exp(st.fit1$logalpha-S_p/st.fit1$Smax)*S_p
+lines(pred.est1~S_p,col='darkred',lwd=2)
+pred.est2=exp(st.fit2$logalpha-S_p/st.fit2$Smax)*S_p
+lines(pred.est2~S_p,col='navy',lwd=2)
+```
+
 
 ## Stable, but autocorrelated, recruitment dynamics
 
@@ -143,7 +176,7 @@ $\epsilon_t = \rho \cdot \epsilon_{t-1}  + \sqrt{1-\rho^{2\Delta t}}\cdot \delta
 
 $\delta_t \sim N(0, \sigma)$
 
-The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($delta_t$) and a 1-year lagged autocorrelation term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species here: $\rho$$\rho$$\rho$), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
+The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($delta_t$) and a 1-year lagged autocorrelation term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
 
 We will add this to our simulated stable dynamics to see how it changes the spawner-recruit curve and parameter estimates.
 
@@ -152,7 +185,6 @@ We will add this to our simulated stable dynamics to see how it changes the spaw
 log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative expect R/S)
 smax=5000 #this parameter can vary massively, from hundreds to millions
 sigma=0.6 #most stocks range from ~0.3 to 1.5
-K = log.a*smax #carrying capacity, aka Seq (equilibrium spawners), the stable attraction point
 rho = 0.9 #autocorrelation parameter - the scale of 'memory' in recruitment deviations
 
 df.ac=salmon_sim(log.a=log.a,smax=smax,sigma=sigma,N=N,rho=rho,form='autocorr')
@@ -201,41 +233,49 @@ What do you notice about the temporal patterns in the residuals?
 
 Let's see how this effects parameter estimates. To account for autocorrelation in our estimation models, we set the *AC* option in *ricker_TMB* or *ricker_stan* to *TRUE*.
 
-First let's see how it performs on the autocorrelated dataset:
+First let's see how it performs on the autocorrelated dataset.
 
-```{r, ac est - ac true}
+```{r, ac est}
 #f
 ac.fit.ac=ricker_TMB(data=df.ac,ac=TRUE,silent=T)
 
 #ac.fit.ac=ricker_stan(data=df.st,ac=T) #alternative stan variant
 
-rho
-ac.fit.ac$rho
-smax
-ac.fit.ac$Smax
-log.a
-ac.fit.ac$logalpha
-
+#true vs. estimated autocorrelation
+c(rho,ac.fit.ac$rho)
+#true vs estimated smax
+c(smax,ac.fit.ac$Smax)
+#true vs estimated log(alpha)
+c(log.a,ac.fit.ac$logalpha)
+#true vs estimated Smsy
+c(smsyCalc(log.a,1/smax),ac.fit.ac$Smsy)
+#true vs estimated Umsy
+c(umsyCalc(log.a),ac.fit.ac$Umsy)
 ```
+
 Let's visualize the model fit, we can use the *samEst* function *static_sr_plot*:
 
-```{r, ac estimates 1,fig.width=6,fig.height=8}
-static_sr_plot(data=df.ac,mod=ac.fit.ac,plot.params=TRUE,resids=TRUE) 
+```{r, ac estimates 1,fig.width=7,fig.height=9}
+static_sr_plot(data=df.ac,mod=ac.fit.ac,plot.params=TRUE) #note - plot.params will print out the main Ricker parameters 
 ```
 
 What if we don't account for autocorrelation, what parameters will we get?
 
-```{r, ac estimates 3,fig.width=6,fig.height=8}
+```{r, ac estimates 3,fig.width=7,fig.height=9}
 ac.fit.st=ricker_TMB(data=df.ac,ac=FALSE,silent=T)
 
-rho
-ac.fit.st$rho
-smax
-ac.fit.st$Smax
-log.a
-ac.fit.st$logalpha
+#true vs. estimated autocorrelation
+c(rho,ac.fit.st$rho)
+#true vs estimated smax
+c(smax,ac.fit.st$Smax)
+#true vs estimated log(alpha)
+c(log.a,ac.fit.st$logalpha)
+#true vs estimated Smsy
+c(smsyCalc(log.a,1/smax),ac.fit.st$Smsy)
+#true vs estimated Umsy
+c(umsyCalc(log.a),ac.fit.st$Umsy)
 
-static_sr_plot(data=df.ac,mod=ac.fit.st,plot.params=TRUE,resids=TRUE) 
+static_sr_plot(data=df.ac,mod=ac.fit.st,plot.params=TRUE) 
 ```
 
 What differences do you find in the Ricker parameter estimates and residual plots for when you account for (or not) autocorrelation in the model?
@@ -252,15 +292,16 @@ st.fit.ac$rho
 There are a few ways to gauge whether autocorrelation in recruitment may exist, in part you can (after some practice) visualize it in the residuals, you can test the parameter with the two model forms as well. One way we could potentially discriminate between the two model forms is using model selection criteria, which the *samEst* *TMB* model functions provide estimates of both the $AIC_c$ and $BIC$, which are estimated as:
 
 $AIC_c = -2log(L) + 2k(k+1)/(n-k-1)$
+
 $BIC = klog(n) - 2log(L)$
 
 where $L$ is the model likelihood (estimated from the normal probability density function in our case), $k$ is the number of parameters (so in our comparison the autocorrelation model has +1 parameters), and $n$ is the number of observations. The lower $AIC$ or $BIC$ value, the more support there is for that model.
 
 We can further transform these estimates from each model into model 'weights', which give an estimate of the relative difference in likelihood support among models $I$ as:
 
-$w_i = e^{-AIC_i/2}/sum(e^{-AIC_i:I/2})|$
+$w_i = e^{-AIC_i/2}/\sum(e^{-AIC_{i:I}/2})|$
 
-We have a *samEst* function, $model_weights$ that will perform this calculation.
+We have a *samEst* function, *model_weights* that will perform this calculation.
 
 ```{r, ac model selection}
 ac.fit.ac$AICc
@@ -279,13 +320,14 @@ What can you conclude from this?
 What about for the stable system?
 
 ```{r, st model selection}
-st.fit.ac$AICc
-st.fit1$AICc
+#stable fit with autocorrelation vs. stable fit with static model
+c(st.fit.ac$AICc, st.fit1$AICc)
+#stable fit with autocorrelation vs. stable fit with static model
+c(st.fit.ac$BIC,st.fit1$BIC)
 
-st.fit.ac$BIC
-st.fit1$BIC
-
+#stable fit with autocorrelation vs. stable fit with static model - AIC model weights
 model_weights(c(st.fit.ac$AICc,st.fit1$AICc),form='TMB')
+#stable fit with autocorrelation vs. stable fit with static model - BIC model weights
 model_weights(c(st.fit.ac$BIC,st.fit1$BIC),form='TMB')
 
 ```
@@ -308,7 +350,7 @@ In this formulation, nonstationary productivity changes for each brood cohort $t
 
 An alternative form of this would allow the capacity parameter ($S_{max}$) to instead vary through time:
 
-$log(R_t/S_t) = log(\alpha) - S_t/S_{max}_t + \epsilon_t$
+$log(R_t/S_t) = log(\alpha) - S_t/S_{max,t} + \epsilon_t$
 
 The key challenge in these models is that there are now two sources of variance in year-to-year $log(R_t/S_t)$ that arise from both 'low frequency' (ie. it changes gradually through time) process error ($\sigma_{\omega}$) and 'high frequency' (ie. it changes rapidly through time - as 'white noise') annual error ($\sigma_{\omega}$) - the latter of which emerges from both sampling effects (ie. measurement errors in recruits and spawners) as well as true variances in demographic processes among brood cohorts.
 
@@ -501,7 +543,7 @@ The first number *1,1* is the probability, when in regime 1 (low productivity re
 We can extract time-series of both the probability of being in each regime through time (*probregime*), as well as the most likely regime (*regime*) at each time point as outputs of the model:
 
 ```{r, regime time-series}
-hmm.fit.prod$probregime
+round(hmm.fit.prod$probregime,2)
 
 hmm.fit.prod$regime
 ```
