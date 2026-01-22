@@ -16,7 +16,7 @@ remotes::install_git('https://github.com/Pacific-salmon-assess/samEst')
 
 Note, that due to the size of the TMB models, that installation may take some time (upwards of 15-20 mins) to complete. If there are issues with installation prior to the workshop, feel free to contact Dan (dan.greenberg[at]dfo-mpo.gc.ca). Note that the package and dependencies were built on R v4.3.2 - but was tested on R v.4.5.2 for compatibility - older versions may cause issues. It is also recommended to use Rstudio, for visualizing the markdown files in HTML.
 
-Most exercises will default to TMB implementation, if you want to also run Bayesian models with [*Stan*](https://mc-stan.org/) (via [*rstan*](https://mc-stan.org/rstan/)), you will need to download [Rtools](https://cran.r-project.org/bin/windows/Rtools/) if using Windows OS - of a version appropriate to your current R version - follow the instructions for installation in the link.
+Most exercises will default to TMB implementation, if you want to also run Bayesian models with [*Stan*](https://mc-stan.org/) (via [*rstan*](https://mc-stan.org/rstan/)), you will need to download [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your particular operating system - of a version appropriate to your current R version (e.g. 4.5 for R 4.5.x) - follow the instructions for installation in the link.
 
 There will be two main exercises in the workshop, interspersed with discussion and presentations. For each exercise we include an Rmarkdown file, where participants can edit the code chunks. Each folder contains the scripts for each exercise.
 
