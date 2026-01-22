@@ -299,25 +299,29 @@ where $L$ is the model likelihood (estimated from the normal probability density
 
 We can further transform these estimates from each model into model 'weights', which give an estimate of the relative difference in likelihood support among models $I$ as:
 
-$w_i = e^{-AIC_i/2}/\sum(e^{-AIC_{i:I}/2})|$
+$w_i = e^{-AIC_i/2}/\sum(e^{-AIC_{i:I}/2})$
 
 We have a *samEst* function, *model_weights* that will perform this calculation.
 
 ```{r, ac model selection}
-ac.fit.ac$AICc
+#autocorrelated data fit with autocorrelation vs. fit with static model
+c(ac.fit.ac$AICc,
 ac.fit.st$AICc
+)
 
-ac.fit.ac$BIC
-ac.fit.st$BIC
+#autocorrelated fit with autocorrelation vs. fit with static model
+c(st.fit.ac$BIC,st.fit1$BIC)
 
+#autocorrelated fit with autocorrelation vs. fit with static model - AIC model weights
 model_weights(c(ac.fit.ac$AICc,ac.fit.st$AICc),form='TMB')
-model_weights(c(ac.fit.ac$BIC,ac.fit.st$BIC),form='TMB')
 
+#autocorrelated fit with autocorrelation vs. fit with static model - BIC model weights
+model_weights(c(ac.fit.ac$BIC,ac.fit.st$BIC),form='TMB')
 ```
 
 What can you conclude from this?
  
-What about for the stable system?
+What about when we apply these models in the fully stable system?
 
 ```{r, st model selection}
 #stable fit with autocorrelation vs. stable fit with static model
@@ -345,7 +349,7 @@ $\omega_{t} \sim N(0, \sigma_{\omega})$
 
 $\epsilon_t \sim N(0, \sigma)$
 
-In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of (\sigma_{\omega}; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of papers - so this particular formulation has now been dubbed the 'Peterman's productivity method'.
+In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of papers - so this particular formulation has now been dubbed the 'Peterman's productivity method'.
 
 
 An alternative form of this would allow the capacity parameter ($S_{max}$) to instead vary through time:
@@ -354,7 +358,7 @@ $log(R_t/S_t) = log(\alpha) - S_t/S_{max,t} + \epsilon_t$
 
 The key challenge in these models is that there are now two sources of variance in year-to-year $log(R_t/S_t)$ that arise from both 'low frequency' (ie. it changes gradually through time) process error ($\sigma_{\omega}$) and 'high frequency' (ie. it changes rapidly through time - as 'white noise') annual error ($\sigma_{\omega}$) - the latter of which emerges from both sampling effects (ie. measurement errors in recruits and spawners) as well as true variances in demographic processes among brood cohorts.
 
-This nonstationary models can be in *samEst* using the *ricker_rw_TMB* (or *ricker_rw_stan*) functions. To choose between productivity or capacity changes, one must specify the time-varying parameter(*tv.par* as *a* or *b*, or *both* - but more on 'both' later).
+This nonstationary models can be in *samEst* using the *ricker_rw_TMB* (or *ricker_rw_stan*) functions. To choose between productivity or capacity changes, one must specify the time-varying parameter(*tv.par* as *a* or *b* - one can technically specify *both*, but we discourage this for reasons we will discuss).
 
 We will test how well these models can actually capture trend trends in these Ricker parameters using another simulation function made for this workshop - here we can change either intrinsic productivity or capacity to time-varying by specifying *par = a* or *par = b* in this function.
 
@@ -373,6 +377,7 @@ df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigm
 ns.prod.fit1=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
 #ns.prod.fit1=ricker_rw_stan(data=df.lin.prod,tv.par='a')
 
+#estimate in red
 plot(df.lin.prod$loga.t,type='l',lwd=2,ylab='log(alpha) parameter',xlab='simulation year',ylim=c(min(c(ns.prod.fit1$logalpha,df.lin.prod$loga.t)),max(c(ns.prod.fit1$logalpha,df.lin.prod$loga.t))))
 lines(ns.prod.fit1$logalpha,lwd=2,col='darkred')
 
@@ -380,11 +385,11 @@ lines(ns.prod.fit1$logalpha,lwd=2,col='darkred')
 
 How well does the estimate approximate the true parameter change? 
 
-Note - under certain conditions it may fail to fit, either you can try the stan version (which tends to be more flexible to imperfect data), flagging priors on (or off), or failing all that re-run the simulated dataset.
+Note - under certain conditions it may fail to fit, either you can try the stan version (which tends to be more flexible), or failing simply by re-running the simulated dataset. Regardless try re-running the above code to see the diversity of estimates one may get in any particular run under the same parameter sets.
 
 You can visualize the spawner-recruit curve fit using the *samEst* function, *rw_sr_plot*:
 
-```{r, rw sr plot - prod, fig.width=6,fig.height=8}
+```{r, rw sr plot - prod, fig.width=7,fig.height=9}
 rw_sr_plot(data=df.lin.prod,mod=ns.prod.fit1)
 ```
 
@@ -405,8 +410,6 @@ ns.smax.fit1=ricker_rw_TMB(data=df.lin.smax,tv.par='b',silent=T)
 
 plot(df.lin.smax$smax.t,type='l',lwd=2,ylab='Smax parameter',xlab='simulation year',ylim=c(min(c(ns.smax.fit1$Smax,df.lin.smax$smax.t)),max(c(ns.smax.fit1$Smax,df.lin.smax$smax.t))))
 lines(ns.smax.fit1$Smax,lwd=2,col='darkred')
-
-
 ```
 
 ```{r, rw plot smax,fig.width=6,fig.height=8}
