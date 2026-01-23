@@ -32,4 +32,4 @@ Exercise 2: Time-varying reference points and management strategy evaluation
   2. harvest control rules with 'static' vs. time-varying benchmarks
   3. assessing management outcomes and trade-offs
 
-You can clone this repository to gain access to the materials (data, scripts, etc.) or download the folder (and unzip) via the green 'code' button above - see (instructions)[https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository].
+You can clone this repository to gain access to the materials (data, scripts, etc.) or download the folder (and unzip) via the green 'code' button above - see [instructions](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
