@@ -80,7 +80,7 @@ Fit the *TMB* estimate of the Ricker curve with *samEst*.
 library(samEst)
 #ricker_TMB requires data-frame or list with S = a vector of spawning abundances, and logRS = a vector of log(recruits/spawner)
 
-st.fit1=ricker_TMB(data=df.st,silent=T)#note silent = T just surpresses the updates on the likelihood gradient, the default includes priors - you can set priors_flag = 0 will turn off priors on Ricker parameters
+st.fit1=ricker_TMB(data=df.st,silent=T)#note silent = T just suppresses the updates on the likelihood gradient, the default includes priors - you can set priors_flag = 0 will turn off priors on Ricker parameters
 
 #st.fit1=ricker_stan(data=df.st,ac=F) #alternative stan variant
 ```
@@ -193,7 +193,7 @@ df.ac=salmon_sim(log.a=log.a,smax=smax,sigma=sigma,N=N,rho=rho,form='autocorr')
 
 Let's visualize this SR curve and the residuals through time - to highlight the time-series element of recruitment dynamics we'll colour code observations by year of the simulation.
 
-```{r, autocorrelated SR plot,fig.width=6,fig.height=8}
+```{r, autocorrelated SR plot,fig.width=7,fig.height=9}
 #
 par(mfrow=c(2,1))
 plot(df.ac$R~df.ac$S,bty='l',type='n',xlim=c(0,max(df.ac$S)),ylim=c(0,max(df.ac$R)),xlab='spawners',ylab='recruits') 
@@ -214,7 +214,7 @@ points(df.ac$eps,pch=21,bg=viridis::viridis(length(df.ac$S)))
 
 Lets's compare this to the same system with no autocorrelation (note if you changed the ricker parameters in the previous section these will not be directly comparable, if not - re-run the previous section with equivalent Ricker parameters). Note 'eps' = $\epsilon_t$ = the residuals from the true parameters.
 
-```{r, stable dynamics comp plot, fig.width=6,fig.height=8}
+```{r, stable dynamics comp plot, fig.width=7,fig.height=9}
 par(mfrow=c(2,1))
 plot(df.st$R~df.st$S,bty='l',type='n',pch=21,xlim=c(0,max(df.st$S)),ylim=c(0,max(df.st$R)),xlab='spawners',ylab='recruits') #Spawner Recruit curve
 lines(df.st$R~df.st$S,lwd=0.5,col=adjustcolor('darkgray',alpha.f=0.5))
@@ -578,6 +578,8 @@ What you probably will find is that estimates from models do not perfectly repli
 
 For the regime shift models, we can also allow both productivity and capacity to differ between regimes - allowing for a lot of flexibility. This could emerge when conditions shift in such a way that both density-dependent and -independent survival are affected.
 
+The *samEst* plotting function *hmm_sr_plot* will show the $k$ estimate spawner-recruit curves, with the observations being colourized based on their probability of emerging from each curve (or regime) - with estimates of probabilities through time as the adjacent plot.
+
 ```{r, prod-cap regime hmm,fig.height=8,fig.width=6}
 #Ricker parameters
 log.a0=1.5 #initial productivity
@@ -597,9 +599,9 @@ hmm_sr_plot(data=df.reg.b,mod=hmm.fit.b)
 
 ```{r, prod cap regime true vs estimated,fig.height=9,fig.width=7}
 par(mfrow=c(2,1))
-plot(df.reg.b$loga.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$loga.t,hmm.fit.b$logalpha)),max(c(df.reg.b$loga.t,hmm.fit.b$logalpha))))
+plot(df.reg.b$loga.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$loga.t,hmm.fit.b$logalpha)),max(c(df.reg.b$loga.t,hmm.fit.b$logalpha))),ylab='productivity',xlab='year')
 lines(hmm.fit.b$logalpha[hmm.fit.b$regime],lwd=2,col='darkred')
-plot(df.reg.b$smax.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$smax.t,hmm.fit.b$Smax)),max(c(df.reg.b$smax.t,hmm.fit.b$Smax))))
+plot(df.reg.b$smax.t,type='l',lwd=2,ylim=c(min(c(df.reg.b$smax.t,hmm.fit.b$Smax)),max(c(df.reg.b$smax.t,hmm.fit.b$Smax))),ylab='Smax',xlab='year')
 lines(hmm.fit.b$Smax[hmm.fit.b$regime],lwd=2,col='darkred')
 ```
 
