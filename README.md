@@ -23,13 +23,13 @@ There will be two main exercises in the workshop, interspersed with discussion a
 Exercise 1: Fitting and assessing nonstationary spawner-recruit models
   1. stable dynamics
   2. stable, but autocorrelated, dynamics
-  3. non-stationary dynamics
+  3. continuous change
   4. regime shifts
   5. empirical examples
 
-Exercise 2: Time-varying reference points and management strategy evaluation
-  1. time-varying Smsy and Umsy
-  2. harvest control rules with 'static' vs. time-varying benchmarks
+Exercise 2: Non-stationary reference points and management strategy evaluation
+  1. non-stationary biological reference points
+  2. harvest control rules with stable vs. non-stationary benchmarks
   3. assessing management outcomes and trade-offs
 
 You can clone this repository to gain access to the materials (data, scripts, etc.) or download the folder (and unzip) via the green 'code' button above - see [instructions](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
