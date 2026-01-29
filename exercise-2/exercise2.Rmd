@@ -1,0 +1,237 @@
+---
+title: 'Exercise 2: Time-varying reference points and management strategy evaluation'
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+# Overview
+
+The following exercises are intended to give participants a broad understanding of how stable and non-stationary spawner-recruit dynamics influence estimates of biological reference points - and the consequences of these different estimation approahces for stock assessment and management scenarios. You may choose to 'knit' this document ('[exercise2.Rmd](https://github.com/Pacific-salmon-assess/nonstationarity-workshop-2026/blob/main/exercise-2/exercise2.Rmd)') to an HTML file, for visualization - or simply read through the text here. We encourage you to modify the R code chunks to experiment with each section to explore the mechanics of the simulations and model testing.
+
+
+```{r, simulation functions,echo=FALSE}
+source('../exercise-1/sim_functions.R')
+```
+
+# Non-stationary stock reference points
+
+As mentioned in the previous exercise, the parameters of the Ricker spawner-recruit model can be directly translated into useful management reference points for a stock based on its estimated population dynamics.
+
+There are two key quantities that we can gather from this relationship, that are both directly applicable to the design of management systems for Pacific salmon fisheries - these can be alternatively classified as 'abundance-based' or 'harvest-based' according to their perspective as a target.
+
+The key abundance-based biological reference point is the spawners that maximizes sustainable yields, $S_{msy}$, which can be calculated with an [exact solution using the LambertW function](https://peerj.com/articles/1623/):
+
+$$S_{msy} = (1 - LambertW(e^{1-log(\alpha)}))/\beta$$
+
+Note that $\beta$ here is equivalent to 1/$S_{max}$.
+
+This target (or some buffered-estimate of it) can be translated into the 'escapement goal' - or how many fish we'd ideally like to 'escape' being harvested to return to their spawning watersheds. Theoretically, this reference point should maximize the long-term sustainable surplus yield - in a spawner-recruit curve framework this would be the abundance of spawners where the predicted recruitment function has the greatest difference between the 1:1 line.
+
+The key harvest-based biological reference point is the maximum sustainable harvest rate, $U_{msy}$:
+
+$$U_{msy} = 1 - LambertW(e^{1-log(\alpha)})$$
+
+Which can be thought of as the harvest (or exploitation) rate that equivalently produce maximum sustainable yield over the long-term.
+
+First, it may be helpful to visualize how these reference points change with respect to the Ricker parameters generally:
+
+```{r, smsy and umsy - changing Ricker pars}
+library(samEst)
+log.a=seq(0.1,2,by=0.1) #initial productivity
+smax0=5000
+log.a0=1
+smax=seq(500,500000)
+smsy.a=smsyCalc(log.a,1/smax0)
+smsy.b=smsyCalc(log.a0,1/smax)
+umsy=umsyCalc(log.a)
+
+par(mfrow=c(2,2))
+plot(smsy.a~log.a,type='l',lwd=2,bty='l')
+plot(smsy.b~smax,type='l',lwd=2,bty='l')
+plot(umsy~log.a,type='l',lwd=2,bty='l')
+plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='umsy')
+```
+
+
+
+Let's use a familiar scenario where productivity ($log(\alpha)$) or capacity $S_{max}$ is declining - we will calculate both the true reference points (based on the underlying simulated parameters) and the estimates based on the random walk model. Feel free to switch this function to 'rw' or 'regime' to test out other forms.
+
+```{r, prod decline - tv smsy and tv umsy,fig.width=6,fig.height=8}
+#Ricker parameters
+log.a0=1.5 #initial productivity
+p.change=-0.5 #proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
+smax0=5000 #initial smax
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+N=50
+
+df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear')
+
+ns.prod.fit1=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
+#ns.prod.fit1=ricker_rw_stan(data=df.lin.prod,tv.par='a')
+true.umsy=umsyCalc(df.lin.prod$loga.t)
+true.smsy=smsyCalc(df.lin.prod$loga.t,1/df.lin.prod$smax.t)
+
+#estimate in red
+par(mfrow=c(2,1))
+plot(true.umsy,type='l',lwd=2,ylab='Umsy',xlab='simulation year',ylim=c(min(c(true.umsy,ns.prod.fit1$Umsy)),max(c(true.umsy,ns.prod.fit1$Umsy))))
+lines(ns.prod.fit1$Umsy,lwd=2,col='darkred')
+plot(true.smsy,type='l',lwd=2,ylab='Smsy',xlab='simulation year',ylim=c(min(c(true.smsy,ns.prod.fit1$Smsy)),max(c(true.smsy,ns.prod.fit1$Smsy))))
+lines(ns.prod.fit1$Smsy,lwd=2,col='darkred')
+```
+
+
+As you can see - they follow straightforward expectations from the changing parameters - as productivity ($log(\alpha)$) declines so too does $S_{msy}$ and $U_{msy}$ (although not linearly, due to their log-scaling), and similarly as $S_{max}$ declines so too does $S_{msy}$ (but not $U_{msy}$).
+
+# Stable and non-stationary harvest control rules
+
+Imagine then how harvest in a salmon fishery may be set based on these reference points. There are a diversity of different 'harvest control rules' that are set for various salmon fisheries throughout the Northeast Paicfic - one commonality is that there is typically a target for exploitation rates based on the returning run size in a given year, as well as a lower limit around which harvest is curtailed to ensure enough fish return to spawn in their natal watersheds to maintain recruitment of future generations (i.e. an escapement goal). Typically, these two quantities - the target rate and escapement goal - will (ideally) be based on estimates of stock-specific reference points: $U_{msy}$ and $S_{msy}$, respectively.
+
+If we then think about how non-stationary versions of these reference points can be translated into a harvest control rule - the result is that these reference points then become 'moving targets' based on estimates from the statistical information in the time-series.
+
+We can visualize a simplistic harvest control rule - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental or recreational or First Nations catch), with a harvest target beyond that limit based on some fraction of $U_{msy}$ - here plotted for 3 different time-points with different base Ricker parameters:
+
+```{r, hcr - nonstationary version}
+log.a=c(0.5,1,1.5)
+smax0=c(5000)
+smsy=smsyCalc(log.a,1/smax0)
+umsy=umsyCalc(log.a)
+
+U.min=0.2*umsy
+eg.limit=1*smsy
+target.ER=1*umsy
+
+plot(c(0,1)~c(0,7000),ylab='Target harvest',xlab='Run size',type='n')
+lines(rep(U.min[1],2)~c(0,eg.limit[1]),lwd=2,col='goldenrod')
+lines(rep(target.ER[1],2)~c(eg.limit[1],7000),lwd=2,col='goldenrod')
+lines(c(U.min[1],target.ER[1])~rep(eg.limit[1],2),lwd=2,col='goldenrod')
+lines(rep(U.min[2],2)~c(0,eg.limit[2]),lwd=2,col='darkred')
+lines(rep(target.ER[2],2)~c(eg.limit[2],7000),lwd=2,col='darkred')
+lines(c(U.min[2],target.ER[2])~rep(eg.limit[2],2),lwd=2,col='darkred')
+lines(rep(U.min[3],2)~c(0,eg.limit[3]),lwd=2,col='navy')
+lines(rep(target.ER[3],2)~c(eg.limit[3],7000),lwd=2,col='navy')
+lines(c(U.min[3],target.ER[3])~rep(eg.limit[3],2),lwd=2,col='navy')
+text(x=par('usr')[2]*0.9,y=target.ER[1]*1.15,paste('Umsy=',round(umsy[1],2)),col='goldenrod')
+text(x=par('usr')[2]*0.9,y=target.ER[2]*1.15,paste('Umsy=',round(umsy[2],2)),col='darkred')
+text(x=par('usr')[2]*0.9,y=target.ER[3]*1.15,paste('Umsy=',round(umsy[3],2)),col='navy')
+text(x=eg.limit[1],y=target.ER[1]*1.15,paste('Smsy=',round(smsy[1],0)),col='goldenrod')
+text(x=eg.limit[2],y=target.ER[2]*1.15,paste('Smsy=',round(smsy[2],0)),col='darkred')
+text(x=eg.limit[3],y=target.ER[3]*1.15,paste('Smsy=',round(smsy[3],0)),col='navy')
+
+
+```
+
+Note - that changes to $S_{max}$ will change the escapement goal and reduced exploitation trigger, but not the harvest target based on $U_{msy1}$.
+
+From the above we can see 2 main themes: that lower estimates of $S_{msy}$ will result in lowering the escapement goal trigger to lower levels of abundance, while lower estimates of $U_{msy}$ will reduce the harvest target.
+
+Estimates of these two reference points are not *fixed* in the traditional Ricker spawner-recruit model, as the prevailing parameters will also adjust as new observations are included - but the sensitivity of parameter estimates to new observations should be much less than the non-stationary variants of the Ricker model (i.e. random walk or hidden Markov variants). This point will become more obvious when we consider that over time stock assessment will reassess spawner-recruit dynamics using updated information, which we will simulate in a closed-loop simulation.
+
+
+We can explore them the potential outcomes of assessing reference points based on non-stationary or traditional forms of the Ricker model in a management-strategy evaluation (or closed-loop simulation. We have created a function for this workshop ('salmon_sim.tv_hcr') to simulate spawner-recruit dynamics as per the previous simulations, but with harvest now dictated by a simple harvest control rule like what was illustrated in the previous section as well as built-in estimation of Ricker parameters according to the user's chosen estimation model. This recreates the 'loop' between salmon population dynamics, management system, and stock assessment techniques reminiscent of a real world fishery. 
+
+You can specify the harvest target based on some fraction of $U_{msy}$ - according to 'er.tar.scalar' (which when set to 1 equals the exact estimate of $U_{msy}$) and the escapement goal trigger based on a fraction of estimated $S_{msy}$ - according to 'eg.scalar' (which when set to 1 equals the exact estimate of $S_{msy}$). When run sizes are detected to be below the escapement goal, it will default to a lower scalar on $U_{msy}$ ('low.scalar') as a minimum harvest rate when run size is below the escapement goal. In all cases there are stochastic variations in realized exploitation from the harvest target. Within the simulation, reference points can be estimated and set by 3 different types of spawner-recruit models: 'stable' (traditional Ricker model), 'rw' (random walk variant), or 'hmm' (hidden Markov variant), with 'hcr.par' dictating what time-varying parameter you wish to allow for the assessment. The models will be re-fit to the simulated data every X years based on 'assess.freq', with a default of 10 years. For the 'rw' and 'hmm' model assessments, the calculated reference points are the average of the estimates throughout the assessment period - so .e.g if 'assess.freq' = 10, then each assessment takes the average of the last 10 years for $U_{msy}$ and $S_{msy}$ as its best estimate for these two model variants. In the case of 'hmm' models, this would be the average of the predicted regime sequence and parameters for each regime (e.g. it could be the mean perhaps 8 estimates of a 'low' regime and 2 estimates of a 'high' regime over that period).
+
+Note that the simulations now start with 20 years of seed data (4 generations) at stable dynamics and randomized exploitation to allow for an initial assessment of reference points. The spawner-recruit dynamics are dictated by similar parameters (e.g. 'tv.par' for 'a', 'b', 'both', representing changes in $log(\alpha)$, $S_{max}$ or both parameters - available in the 'regime' scenario only) and magnitudes of change ('p.change', and 'p.change2' for capacity in the 'both' regime scenario) as in the simulation functions from exercise 1.
+
+we can start by exploring how the estimated reference points track the known change, and how this in turn shapes the harvest control rule used by the management system at each assessment. Try varying the 'tv.par', 'tv.form', and 'hcr.form' to explore different scenarios of nonstationarity relative to a stable model benchmark.
+
+```{r, closed-loop simulation 1}
+log.a0=1.5 #initial productivity
+p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
+smax0=5000 #initial smax
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+N=50 #length of simulation
+
+#common parameters between different assessment model forms to keep comparability:
+
+eg.scalar=1 #escapement goal = 1*Smsy
+assess.freq=10 #years between reference point assessments
+upper.tar.scalar=1 #harvest target above escapement goal scalar = 1*Umsy
+lower.tar.scalar=0.2 #harvest target below escapement goal scalar = 0.2*Umsy
+
+mse.prod.stable=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+
+mse.prod.ns=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+
+```
+
+We can examine how the estimated reference points track the true values - these are saved as outputs from the function as either 'smsy.true' or 'smsy.est' referring to either the true underlying parameters that are changing versus those estimated by the chosen Ricker model.
+
+```{r, ref pt tracking in closed loop sim,fig.width=6,fig.height=8}
+par(mfrow=c(2,1))
+plot(mse.prod.stable$umsy.true,ylim=c(0,1),type='l',lwd=2,xlab='year of simulation',ylab='Umsy')
+lines(mse.prod.stable$umsy.est,lwd=2,col='navy')
+lines(mse.prod.ns$umsy.est,lwd=2,col='darkred')
+
+plot(mse.prod.stable$smsy.true,ylim=c(min(c(mse.prod.stable$smsy.true,mse.prod.stable$smsy.est,mse.prod.ns$smsy.est)),max(c(mse.prod.stable$smsy.true,mse.prod.stable$smsy.est,mse.prod.ns$smsy.est))),type='l',lwd=2,xlab='year of simulation',ylab='Smsy')
+lines(mse.prod.stable$smsy.est,lwd=2,col='navy')
+lines(mse.prod.ns$smsy.est,lwd=2,col='darkred')
+```
+
+Notably, the estimated reference points for both the stable and non-stationary Ricker models update to reflect new information as the underlying spawner-recruitment parameters change (to varying success) according to the assessment frequency. The non-stationary forms however tend to react more quickly to these changes (sometimes erroneously, however) given the nature of models and how we apply their estimated reference points (i.e. means of the last generations since the previous assessment).
+
+We can also visualize how this results in different harvest control rules at different time-points in the simulation:
+
+```{r, stable and nonstationary hcr, fig.width=7,fig.height=9}
+tp=c(1,round(nrow(mse.prod.stable)/2),nrow(mse.prod.stable)) #time slice at t=1, half way, final
+
+U.min.st=lower.tar.scalar*mse.prod.stable$umsy.est
+U.min.ns=lower.tar.scalar*mse.prod.ns$umsy.est
+
+eg.limit.st=eg.scalar*mse.prod.stable$smsy.est
+eg.limit.ns=eg.scalar*mse.prod.ns$smsy.est
+
+target.ER.st=upper.tar.scalar*mse.prod.stable$umsy.est
+target.ER.ns=upper.tar.scalar*mse.prod.ns$umsy.est
+
+par(mfrow=c(2,1))
+#stable Ricker model plot
+plot(c(0,1)~c(0,2*max(eg.limit.st)),ylab='Target harvest',xlab='Run size',type='n',main='Stable Ricker model')
+lines(rep(U.min.st[tp[1]],2)~c(0,eg.limit.st[tp[1]]),lwd=2,col='goldenrod')
+lines(rep(target.ER.st[tp[1]],2)~c(eg.limit.st[tp[1]],2*max(eg.limit.st)),lwd=2,col='goldenrod')
+lines(c(U.min.st[tp[1]],target.ER.st[tp[1]])~rep(eg.limit.st[tp[1]],2),lwd=2,col='goldenrod')
+lines(rep(U.min.st[tp[2]],2)~c(0,eg.limit.st[tp[2]]),lwd=2,col='darkred')
+lines(rep(target.ER.st[tp[2]],2)~c(eg.limit.st[tp[2]],2*max(eg.limit.st)),lwd=2,col='darkred')
+lines(c(U.min.st[tp[2]],target.ER.st[tp[2]])~rep(eg.limit.st[tp[2]],2),lwd=2,col='darkred')
+lines(rep(U.min.st[tp[3]],2)~c(0,eg.limit.st[tp[3]]),lwd=2,col='navy')
+lines(rep(target.ER.st[tp[3]],2)~c(eg.limit.st[tp[3]],2*max(eg.limit.st)),lwd=2,col='navy')
+lines(c(U.min.st[tp[3]],target.ER.st[tp[3]])~rep(eg.limit.st[tp[3]],2),lwd=2,col='navy')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='goldenrod')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='navy')
+text(x=par('usr')[2]*0.9,y=target.ER.st[tp[1]]*1.05,paste('Umsy=',round(mse.prod.stable$umsy.est[tp[1]],2)),col='goldenrod')
+text(x=par('usr')[2]*0.9,y=target.ER.st[tp[2]]*1.05,paste('Umsy=',round(mse.prod.stable$umsy.est[tp[2]],2)),col='darkred')
+text(x=par('usr')[2]*0.9,y=target.ER.st[tp[3]]*1.05,paste('Umsy=',round(mse.prod.stable$umsy.est[tp[3]],2)),col='navy')
+text(x=eg.limit.st[tp[1]],y=target.ER.st[tp[1]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[1]],0)),col='goldenrod')
+text(x=eg.limit.st[tp[2]],y=target.ER.st[tp[2]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[2]],0)),col='darkred')
+text(x=eg.limit.st[tp[3]],y=target.ER.st[tp[3]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[3]],0)),col='navy')
+
+#nonstationary Ricker model plot
+plot(c(0,1)~c(0,2*max(eg.limit.ns)),ylab='Target harvest',xlab='Run size',type='n',main='Non-stationary Ricker model')
+lines(rep(U.min.ns[tp[1]],2)~c(0,eg.limit.ns[tp[1]]),lwd=2,col='goldenrod')
+lines(rep(target.ER.ns[tp[1]],2)~c(eg.limit.ns[tp[1]],2*max(eg.limit.ns)),lwd=2,col='goldenrod')
+lines(c(U.min.ns[tp[1]],target.ER.ns[tp[1]])~rep(eg.limit.ns[tp[1]],2),lwd=2,col='goldenrod')
+lines(rep(U.min.ns[tp[2]],2)~c(0,eg.limit.ns[tp[2]]),lwd=2,col='darkred')
+lines(rep(target.ER.ns[tp[2]],2)~c(eg.limit.ns[tp[2]],2*max(eg.limit.ns)),lwd=2,col='darkred')
+lines(c(U.min.ns[tp[2]],target.ER.ns[tp[2]])~rep(eg.limit.ns[tp[2]],2),lwd=2,col='darkred')
+lines(rep(U.min.ns[tp[3]],2)~c(0,eg.limit.ns[tp[3]]),lwd=2,col='navy')
+lines(rep(target.ER.ns[tp[3]],2)~c(eg.limit.ns[tp[3]],2*max(eg.limit.ns)),lwd=2,col='navy')
+lines(c(U.min.ns[tp[3]],target.ER.ns[tp[3]])~rep(eg.limit.ns[tp[3]],2),lwd=2,col='navy')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='goldenrod')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='navy')
+text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[1]]*1.05,paste('Umsy=',round(mse.prod.ns$umsy.est[tp[1]],2)),col='goldenrod')
+text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[2]]*1.05,paste('Umsy=',round(mse.prod.ns$umsy.est[tp[2]],2)),col='darkred')
+text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[3]]*1.05,paste('Umsy=',round(mse.prod.ns$umsy.est[tp[3]],2)),col='navy')
+text(x=eg.limit.ns[tp[1]],y=target.ER.ns[tp[1]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[1]],0)),col='goldenrod')
+text(x=eg.limit.ns[tp[2]],y=target.ER.ns[tp[2]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[2]],0)),col='darkred')
+text(x=eg.limit.ns[tp[3]],y=target.ER.ns[tp[3]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[3]],0)),col='navy')
+
+```
+
+# Assessing management outcomes and trade-offs
+
+
