@@ -165,15 +165,19 @@ par(mfrow=c(2,1))
 plot(mse.prod.stable$umsy.true,ylim=c(0,1),type='l',lwd=2,xlab='year of simulation',ylab='Umsy')
 lines(mse.prod.stable$umsy.est,lwd=2,col='navy')
 lines(mse.prod.ns$umsy.est,lwd=2,col='darkred')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.15,'Stable',col='navy')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.1,'Non-stationary',col='darkred')
 
 plot(mse.prod.stable$smsy.true,ylim=c(min(c(mse.prod.stable$smsy.true,mse.prod.stable$smsy.est,mse.prod.ns$smsy.est)),max(c(mse.prod.stable$smsy.true,mse.prod.stable$smsy.est,mse.prod.ns$smsy.est))),type='l',lwd=2,xlab='year of simulation',ylab='Smsy')
 lines(mse.prod.stable$smsy.est,lwd=2,col='navy')
 lines(mse.prod.ns$smsy.est,lwd=2,col='darkred')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.8,'Stable',col='navy')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.85,'Non-stationary',col='darkred')
 ```
 
 Notably, the estimated reference points for both the stable and non-stationary Ricker models update to reflect new information as the underlying spawner-recruitment parameters change (to varying success) according to the assessment frequency. The non-stationary forms however tend to react more quickly to these changes (sometimes erroneously, however) given the nature of models and how we apply their estimated reference points (i.e. means of the last generations since the previous assessment).
 
-We can also visualize how this results in different harvest control rules at different time-points in the simulation:
+We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference ponts are estimated (indicated by the coloured lines) relative to their true simulation reference points (indicated by the points) in the simulation:
 
 ```{r, stable and nonstationary hcr, fig.width=7,fig.height=9}
 tp=c(1,round(nrow(mse.prod.stable)/2),nrow(mse.prod.stable)) #time slice at t=1, half way, final
@@ -208,6 +212,9 @@ text(x=par('usr')[2]*0.9,y=target.ER.st[tp[3]]*1.05,paste('Umsy=',round(mse.prod
 text(x=eg.limit.st[tp[1]],y=target.ER.st[tp[1]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[1]],0)),col='goldenrod')
 text(x=eg.limit.st[tp[2]],y=target.ER.st[tp[2]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[2]],0)),col='darkred')
 text(x=eg.limit.st[tp[3]],y=target.ER.st[tp[3]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[3]],0)),col='navy')
+points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=3,bg='goldenrod')
+points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=3,bg='darkred')
+points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=3,bg='navy')
 
 #nonstationary Ricker model plot
 plot(c(0,1)~c(0,2*max(eg.limit.ns)),ylab='Target harvest',xlab='Run size',type='n',main='Non-stationary Ricker model')
@@ -229,9 +236,124 @@ text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[3]]*1.05,paste('Umsy=',round(mse.prod
 text(x=eg.limit.ns[tp[1]],y=target.ER.ns[tp[1]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[1]],0)),col='goldenrod')
 text(x=eg.limit.ns[tp[2]],y=target.ER.ns[tp[2]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[2]],0)),col='darkred')
 text(x=eg.limit.ns[tp[3]],y=target.ER.ns[tp[3]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[3]],0)),col='navy')
+points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=3,bg='goldenrod')
+points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=3,bg='darkred')
+points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=3,bg='navy')
 
 ```
 
 # Assessing management outcomes and trade-offs
 
+Though understanding how the estimates from our various spawner-recruit models match the true generating parameters is, potentially, of interest from a statistical and mechanical perspective - ultimately the real concern is how conditioning the harvest control rule changes outcomes in terms of the abundance of returning spawners and our ability to still harvest fish under the generating conditions.
 
+We can empirically assess the potential trade-off between mean spawner abundance and mean catch using either the stable or non-stationary Ricker model assessments:
+
+```{r, spawners vs catch - stable and non stationary}
+#stable catch and spawner abundance
+mean.catch.st=mean(mse.prod.stable$catch)
+sd.catch.st=sd(mse.prod.stable$catch)
+
+mean.spn.st=mean(mse.prod.stable$S)
+sd.spn.st=sd(mse.prod.stable$S)
+
+#non nsationary catch and spawner abundance
+mean.catch.ns=mean(mse.prod.ns$catch)
+sd.catch.ns=sd(mse.prod.ns$catch)
+
+mean.spn.ns=mean(mse.prod.ns$S)
+sd.spn.ns=sd(mse.prod.ns$S)
+
+plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(min(c(mean.catch.st,mean.catch.ns,mean.spn.st,mean.spn.ns))*0.75,max(c(mean.catch.st,mean.catch.ns,mean.spn.st,mean.spn.ns))*1.25),xaxt='n',ylab='value',xlab='')
+lines(c(mean.catch.st-sd.catch.st,mean.catch.st+sd.catch.st)~rep(0.9,2),col='navy')
+lines(c(mean.spn.st-sd.spn.st,mean.spn.st+sd.spn.st)~rep(1.9,2),col='navy')
+lines(c(mean.catch.ns-sd.catch.ns,mean.catch.ns+sd.catch.ns)~rep(1.1,2),col='darkred')
+lines(c(mean.spn.ns-sd.spn.ns,mean.spn.ns+sd.spn.ns)~rep(2.1,2),col='darkred')
+lines(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),lwd=2,col='navy')
+points(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),pch=21,bg='navy',cex=3)
+lines(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),lwd=2,col='darkred')
+points(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),pch=21,bg='darkred',cex=3)
+mtext(side=1,'Catch',at=1,line=1)
+mtext(side=1,'Spawners',at=2,line=1)
+text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
+text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
+```
+
+What trade-offs, if any do you find between basing key management reference points in the harvest control rule on either the stable or non-stationary Ricker model estimates?
+
+Since this previous example only runs a single scenario, and there is significant stochasticity in both the population dynamics and harvest, we can run this function across many iterations to gain more insights into the general behaviour.
+
+Try altering the simulation parameters to other magnitudes or forms of parameter change, and assessment types, to explore how these trade-offs may alter according to the specific simulation scenarios.
+
+```{r, closed loop sims segment, fig.width=7,fig.height=9,warning=FALSE}
+log.a0=1.5 #initial productivity
+p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
+smax0=5000 #initial smax
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+N=50 #length of simulation
+
+#common parameters between different assessment model forms to keep comparability:
+
+eg.scalar=1 #escapement goal = 1*Smsy
+assess.freq=10 #years between reference point assessments
+upper.tar.scalar=1 #harvest target above escapement goal scalar = 1*Umsy
+lower.tar.scalar=0.2 #harvest target below escapement goal scalar = 0.2*Umsy
+
+sims.st=list() #list to hold outputs for simulations with stable assessment models
+sims.ns=list() #list to hold outputs for simulations with stable assessment models
+
+iter=40 #nynber of simulations to run
+m.catch.st=numeric(iter);m.catch.ns=numeric(iter)
+sd.catch=numeric(iter);sd.catch.ns=numeric(iter)
+m.spn.st=numeric(iter);m.spn.ns=numeric(iter)
+sd.spn.st=numeric(iter);sd.spn.ns=numeric(iter)
+
+for(i in 1:iter){
+  sims.st[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+  
+  sims.ns[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+
+  #calculate sim specific mean & sd of catch and spawner abundance
+  m.catch.st[i]=mean(sims.st[[i]]$catch)
+  m.catch.ns[i]=mean(sims.ns[[i]]$catch)
+  sd.catch.st[i]=sd(sims.st[[i]]$catch)
+  sd.catch.ns[i]=sd(sims.ns[[i]]$catch)
+  
+  m.spn.st[i]=mean(sims.st[[i]]$S)
+  m.spn.ns[i]=mean(sims.ns[[i]]$S)
+  sd.spn.st[i]=sd(sims.st[[i]]$S)
+  sd.spn.ns[i]=sd(sims.ns[[i]]$S)
+}
+
+par(mfrow=c(2,1))
+plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(min(c(median(m.catch.st),median(m.catch.ns),median(m.spn.st),median(m.spn.ns)))*0.25,max(c(median(m.catch.st),median(m.catch.ns),median(m.spn.st),median(m.spn.ns)))*1.75),xaxt='n',ylab='value',xlab='')
+lines(c(median(m.catch.st)-sd(m.catch.st)*2,median(m.catch.st)+sd(m.catch.st)*2)~rep(0.9,2),col='navy')
+lines(c(median(m.spn.st)-sd(m.spn.st)*2,median(m.spn.st)+sd(m.spn.st)*2)~rep(1.9,2),col='navy')
+lines(c(median(m.catch.ns)-sd(m.catch.ns)*2,median(m.catch.ns)+sd(m.catch.ns)*2)~rep(1.1,2),col='darkred')
+lines(c(median(m.spn.ns)-sd(m.spn.ns)*2,median(m.spn.ns)+sd(m.spn.ns)*2)~rep(2.1,2),col='darkred')
+lines(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),lwd=2,col='navy')
+points(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=3)
+lines(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),lwd=2,col='darkred')
+points(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=3)
+mtext(side=1,'Catch',at=1,line=1)
+mtext(side=1,'Spawners',at=2,line=1)
+text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
+text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
+
+plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(min(c(median(sd.catch.st),median(sd.catch.ns),median(sd.spn.st),median(sd.spn.ns)))*0.25,max(c(median(sd.catch.st),median(sd.catch.ns),median(sd.spn.st),median(sd.spn.ns)))*1.75),xaxt='n',ylab='value',xlab='')
+lines(c(median(sd.catch.st)-sd(sd.catch.st)*2,median(sd.catch.st)+sd(sd.catch.st)*2)~rep(0.9,2),col='navy')
+lines(c(median(sd.spn.st)-sd(sd.spn.st)*2,median(sd.spn.st)+sd(sd.spn.st)*2)~rep(1.9,2),col='navy')
+lines(c(median(sd.catch.ns)-sd(sd.catch.ns)*2,median(sd.catch.ns)+sd(sd.catch.ns)*2)~rep(1.1,2),col='darkred')
+lines(c(median(sd.spn.ns)-sd(sd.spn.ns)*2,median(sd.spn.ns)+sd(sd.spn.ns)*2)~rep(2.1,2),col='darkred')
+lines(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),lwd=2,col='navy')
+points(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=3)
+lines(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),lwd=2,col='darkred')
+points(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=3)
+mtext(side=1,'Catch st. dev.',at=1,line=1)
+mtext(side=1,'Spawners st. dev.',at=2,line=1)
+text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
+text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
+```
+
+Exploring different combinations should give you a sense of how choice of stationary/non-stationary models in setting reference points (and their implementation) may shape management outcomes.
+
+Keep in mind, that these outcomes will also be specific to the particular aspects of the simulation, including factors like the form of harvest control rule we implement here (versus e.g. more complex shapes with multiple trigger points or ramped exploitation rates), the way one estimates reference points in a non-stationary fit (e.g. averaging estimates over the last 1, 2, or more generations; or taking a weighted average, or taking the last value, etc.), the fact that many forms of stochasticity are not included in this simulation function (e.g. age composition is fixed, there is no measurement error in spawner-recruit data, there is no forecasting error for run size when implementing management targets). The outcomes one get can be fairly sensitive to the complex dynamics that are inherent in a coupled system as we have in our salmon populations and fisheries.
