@@ -391,7 +391,9 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
     if(Rs[t]<Smsy.est[t]*eg.scalar){
       U[t]=plogis(rnorm(1,qlogis(U.min),abs(qlogis(U.min)*0.1)))
     }else if(Rs[t]>Smsy.est[t]*eg.scalar&Rs[t]<Smsy.est[t]*upper.tar.scalar){
-      U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar*(Rs[t]/Smsy.est[t]*upper.tar.scalar)),abs(qlogis(Umsy.est[t]*U.scalar*(Rs[t]/Smsy.est[t]*upper.tar.scalar))*0.1)))
+      U=U.min+Umsy.est[t]*U.scalar*((Rs[t]-Smsy.est[t]*eg.scalar)/(Smsy.est[t]*upper.tar.scalar-Smsy.est[t]*eg.scalar))
+      U=min(U,Umsy.est[t]*U.scalar)
+      U[t]=plogis(rnorm(1,qlogis(U),abs(qlogis(U))*0.1))
     }else if(Rs[t]>Smsy.est[t]*upper.tar.scalar){
       U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar),abs(qlogis(Umsy.est[t]*U.scalar)*0.1)))
     }
