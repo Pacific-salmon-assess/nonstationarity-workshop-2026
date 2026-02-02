@@ -140,7 +140,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
     
     U=runif(L,umsy*0.25,umsy*1.25) #harvest rate - uniformly drawn with constraints around 25% and 1.25x Umsy
     
-    if(par=='a'){
+    if(tv.par=='a'){
       smax=rep(smax0,L)
       if(form=='linear'){
         log.a=numeric(L)
@@ -162,7 +162,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
         log.a=rep(rep(c(log.a0,log.a0*(1+p.change)),each=reg.length),length.out=L)
       }
     } 
-    if(par=='b'){
+    if(tv.par=='b'){
       log.a=rep(log.a0,L)
       if(form=='linear'){
         smax=numeric(L)
@@ -184,7 +184,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
         smax=rep(rep(c(smax0,smax0*(1+p.change)),each=reg.length),length.out=L)
       }
     } 
-    if(par=='both'){
+    if(tv.par=='both'){
       if(is.null(reg.length)==T){print('must specify regime length')}
       smax=numeric(L)
       log.a=numeric(L)
@@ -248,7 +248,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
   L=N+A*5 #total simulation length, add 4x max age for starting cohorts to seed the simulation and for final incomplete brood years - these will be dropped later
   
   
-  if(par=='a'){
+  if(tv.par=='a'){
     smax=rep(smax0,L)
     if(form=='linear'){
       log.a=numeric(L)
@@ -271,7 +271,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
       log.a[c(A*4+1):L]=rep(rep(c(log.a0,log.a0*(1+p.change)),each=reg.length),length.out=c(L-A*4))
     }
   } 
-  if(par=='b'){
+  if(tv.par=='b'){
     log.a=rep(log.a0,L)
     if(form=='linear'){
       smax=numeric(L)
@@ -294,7 +294,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
       smax=rep(rep(c(smax0,smax0*(1+p.change)),each=reg.length),length.out=c(L-A*4))
     }
   } 
-  if(par=='both'){
+  if(tv.par=='both'){
     if(is.null(reg.length)==T){print('must specify regime length')}
     smax=numeric(L)
     log.a=numeric(L)
