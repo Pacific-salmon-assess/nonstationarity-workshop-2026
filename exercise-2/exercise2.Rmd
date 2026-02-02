@@ -51,15 +51,15 @@ umsy=umsyCalc(log.a)
 par(mfrow=c(2,2))
 plot(smsy.a~log.a,type='l',lwd=2,bty='l')
 plot(smsy.b~smax,type='l',lwd=2,bty='l')
-plot(umsy~log.a,type='l',lwd=2,bty='l')
-plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='umsy')
+plot(umsy~log.a,type='l',lwd=2,bty='l',ylim=c(0,1))
+plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='umsy',ylim=c(0,1))
 ```
 
 
 
-Let's use a familiar scenario where productivity ($log(\alpha)$) or capacity $S_{max}$ is declining - we will calculate both the true reference points (based on the underlying simulated parameters) and the estimates based on the random walk model. Feel free to switch this function to 'rw' or 'regime' to test out other forms.
+Let's use a familiar scenario where productivity ($log(\alpha)$) or capacity ($S_{max}$) is declining - we will calculate both the true reference points (based on the underlying simulated parameters) and the estimates based on the random walk model. Feel free to switch this function to 'rw' or 'regime' to test out other forms.
 
-```{r, prod decline - tv smsy and tv umsy,fig.width=6,fig.height=8}
+```{r, prod decline - tv smsy and tv umsy,fig.width=6,fig.height=10}
 #Ricker parameters
 log.a0=1.5 #initial productivity
 p.change=-0.5 #proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
@@ -93,7 +93,7 @@ If we then think about how non-stationary versions of these reference points can
 
 We can visualize a simplistic harvest control rule - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental or recreational or First Nations catch), with a harvest target beyond that limit based on some fraction of $U_{msy}$ - here plotted for 3 different time-points with different base Ricker parameters:
 
-```{r, hcr - nonstationary version}
+```{r, hcr - nonstationary version,fig.width=6,fig.height=5}
 log.a=c(0.5,1,1.5)
 smax0=c(5000)
 smsy=smsyCalc(log.a,1/smax0)
@@ -147,8 +147,8 @@ N=50 #length of simulation
 
 #common parameters between different assessment model forms to keep comparability:
 
-eg.scalar=1 #escapement goal = 1*Smsy
-assess.freq=10 #years between reference point assessments
+eg.scalar=1 #escapement goal as a fraction of Smsy - ie. 1 = 1*Smsy
+assess.freq=10 #years between reference point re-assessments
 upper.tar.scalar=1 #harvest target above escapement goal scalar = 1*Umsy
 lower.tar.scalar=0.2 #harvest target below escapement goal scalar = 0.2*Umsy
 
@@ -160,7 +160,7 @@ mse.prod.ns=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=
 
 We can examine how the estimated reference points track the true values - these are saved as outputs from the function as either 'smsy.true' or 'smsy.est' referring to either the true underlying parameters that are changing versus those estimated by the chosen Ricker model.
 
-```{r, ref pt tracking in closed loop sim,fig.width=6,fig.height=8}
+```{r, ref pt tracking in closed loop sim,fig.width=6,fig.height=10}
 par(mfrow=c(2,1))
 plot(mse.prod.stable$umsy.true,ylim=c(0,1),type='l',lwd=2,xlab='year of simulation',ylab='Umsy')
 lines(mse.prod.stable$umsy.est,lwd=2,col='navy')
@@ -179,7 +179,7 @@ Notably, the estimated reference points for both the stable and non-stationary R
 
 We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference ponts are estimated (indicated by the coloured lines) relative to their true simulation reference points (indicated by the points) in the simulation:
 
-```{r, stable and nonstationary hcr, fig.width=7,fig.height=9}
+```{r, stable and nonstationary hcr, fig.width=6,fig.height=10}
 tp=c(1,round(nrow(mse.prod.stable)/2),nrow(mse.prod.stable)) #time slice at t=1, half way, final
 
 U.min.st=lower.tar.scalar*mse.prod.stable$umsy.est
@@ -212,9 +212,9 @@ text(x=par('usr')[2]*0.9,y=target.ER.st[tp[3]]*1.05,paste('Umsy=',round(mse.prod
 text(x=eg.limit.st[tp[1]],y=target.ER.st[tp[1]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[1]],0)),col='goldenrod')
 text(x=eg.limit.st[tp[2]],y=target.ER.st[tp[2]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[2]],0)),col='darkred')
 text(x=eg.limit.st[tp[3]],y=target.ER.st[tp[3]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[3]],0)),col='navy')
-points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=3,bg='goldenrod')
-points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=3,bg='darkred')
-points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=3,bg='navy')
+points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=2,bg='goldenrod')
+points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
+points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=2,bg='navy')
 
 #nonstationary Ricker model plot
 plot(c(0,1)~c(0,2*max(eg.limit.ns)),ylab='Target harvest',xlab='Run size',type='n',main='Non-stationary Ricker model')
@@ -236,11 +236,15 @@ text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[3]]*1.05,paste('Umsy=',round(mse.prod
 text(x=eg.limit.ns[tp[1]],y=target.ER.ns[tp[1]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[1]],0)),col='goldenrod')
 text(x=eg.limit.ns[tp[2]],y=target.ER.ns[tp[2]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[2]],0)),col='darkred')
 text(x=eg.limit.ns[tp[3]],y=target.ER.ns[tp[3]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[3]],0)),col='navy')
-points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=3,bg='goldenrod')
-points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=3,bg='darkred')
-points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=3,bg='navy')
+points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=2,bg='goldenrod')
+points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
+points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=2,bg='navy')
 
 ```
+
+You will likely notice some large differences in how the key reference points adjust through time according to either the stable and non-stationary Ricker models. 
+
+Note that there is a countervailing effect in how changing reference points work in the harvest control rule with an escapement goal trigger and lower limit harvest rate. While $U_{msy}$ will decrease with lower productivity - resulting in lower harvest targets, $S_{msy}$ also decreases at lower productivity - resulting in a lower trigger for a higher harvest target at lower run sizes.
 
 # Assessing management outcomes and trade-offs
 
@@ -248,7 +252,7 @@ Though understanding how the estimates from our various spawner-recruit models m
 
 We can empirically assess the potential trade-off between mean spawner abundance and mean catch using either the stable or non-stationary Ricker model assessments:
 
-```{r, spawners vs catch - stable and non stationary}
+```{r, spawners vs catch - stable and non stationary,fig.width=6,fig.height=5}
 #stable catch and spawner abundance
 mean.catch.st=mean(mse.prod.stable$catch)
 sd.catch.st=sd(mse.prod.stable$catch)
@@ -269,9 +273,9 @@ lines(c(mean.spn.st-sd.spn.st,mean.spn.st+sd.spn.st)~rep(1.9,2),col='navy')
 lines(c(mean.catch.ns-sd.catch.ns,mean.catch.ns+sd.catch.ns)~rep(1.1,2),col='darkred')
 lines(c(mean.spn.ns-sd.spn.ns,mean.spn.ns+sd.spn.ns)~rep(2.1,2),col='darkred')
 lines(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),lwd=2,col='navy')
-points(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),pch=21,bg='navy',cex=3)
+points(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),pch=21,bg='navy',cex=2)
 lines(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),lwd=2,col='darkred')
-points(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),pch=21,bg='darkred',cex=3)
+points(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),pch=21,bg='darkred',cex=2)
 mtext(side=1,'Catch',at=1,line=1)
 mtext(side=1,'Spawners',at=2,line=1)
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
@@ -284,7 +288,7 @@ Since this previous example only runs a single scenario, and there is significan
 
 Try altering the simulation parameters to other magnitudes or forms of parameter change, and assessment types, to explore how these trade-offs may alter according to the specific simulation scenarios.
 
-```{r, closed loop sims segment, fig.width=7,fig.height=9,warning=FALSE}
+```{r, closed loop sims segment, fig.width=6,fig.height=10,warning=FALSE}
 log.a0=1.5 #initial productivity
 p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
 smax0=5000 #initial smax
@@ -331,9 +335,9 @@ lines(c(median(m.spn.st)-sd(m.spn.st)*2,median(m.spn.st)+sd(m.spn.st)*2)~rep(1.9
 lines(c(median(m.catch.ns)-sd(m.catch.ns)*2,median(m.catch.ns)+sd(m.catch.ns)*2)~rep(1.1,2),col='darkred')
 lines(c(median(m.spn.ns)-sd(m.spn.ns)*2,median(m.spn.ns)+sd(m.spn.ns)*2)~rep(2.1,2),col='darkred')
 lines(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),lwd=2,col='navy')
-points(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=3)
+points(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=2)
 lines(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),lwd=2,col='darkred')
-points(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=3)
+points(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=2)
 mtext(side=1,'Catch',at=1,line=1)
 mtext(side=1,'Spawners',at=2,line=1)
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
@@ -345,9 +349,9 @@ lines(c(median(sd.spn.st)-sd(sd.spn.st)*2,median(sd.spn.st)+sd(sd.spn.st)*2)~rep
 lines(c(median(sd.catch.ns)-sd(sd.catch.ns)*2,median(sd.catch.ns)+sd(sd.catch.ns)*2)~rep(1.1,2),col='darkred')
 lines(c(median(sd.spn.ns)-sd(sd.spn.ns)*2,median(sd.spn.ns)+sd(sd.spn.ns)*2)~rep(2.1,2),col='darkred')
 lines(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),lwd=2,col='navy')
-points(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=3)
+points(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=2)
 lines(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),lwd=2,col='darkred')
-points(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=3)
+points(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=2)
 mtext(side=1,'Catch st. dev.',at=1,line=1)
 mtext(side=1,'Spawners st. dev.',at=2,line=1)
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')

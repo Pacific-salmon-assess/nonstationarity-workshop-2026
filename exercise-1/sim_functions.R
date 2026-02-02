@@ -133,7 +133,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.cha
     age.p=c(0.25,0.5,0.25) # proportions returning at each age class = note if modifying this, it must sum to 1. This is fixed in this example to keep things simple but one could vary with some noise from year-to-year using e.g. dirichlet distribution
     
     umsy=samEst::umsyCalc(log.a0)
-    K=loga0*smax0
+    K=log.a0*smax0
     #simulation parameters
     N=50 #number of simulated years for our spawner-recruit curve
     L=N+A*2 #total simulation length, add 2x max age for starting cohorts to seed the simulation and for final incomplete brood years - these will be dropped later
@@ -234,7 +234,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.cha
   return(df)
 }
 
-salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.change2,form=c('linear','rw','regime'),reg.length=NULL,hcr.form=c('stable','rw','hmm'),hcr.par=c('a','b','both'),assess.freq=10,eg.scalar=1,upper.tar.scalar=1,lower.tar.scalar=0.2){
+salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.change2,form=c('linear','rw','regime'),reg.length=NULL,hcr.form=c('stable','rw','hmm'),hcr.par=c('a','b','both'),assess.freq=10,eg.scalar=1,upper.tar.scalar=1.5,U.scalar=1,U.min=0.025){
   
   #age structure
   #this accounts for different maturations as is typical for most salmon species
@@ -386,6 +386,14 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p
     }else{
       Umsy.est[t]=Umsy.est[t-1]
       Smsy.est[t]=Smsy.est[t-1]
+    }
+    
+    if(Rs[t]<Smsy.est[t]*eg.scalar){
+    U[t]=plogis(rnorm(1,qlogis(U.min),abs(qlogis(U.min)*0.1)))
+    }else if(Rs[t]>Smsy.est[t]*eg.scalar&Rs[t]<Smsy.est[t]*upper.tar.scalar){
+      
+    }else if(Rs[t]>Smsy.est[t]*upper.tar.scalar){
+      U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar),abs(qlogis(Umsy.est[t]*U.scalar)*0.1)))
     }
     
     if(Rs[t]>Smsy.est[t]){
