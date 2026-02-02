@@ -142,13 +142,13 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
     
     if(tv.par=='a'){
       smax=rep(smax0,L)
-      if(form=='linear'){
+      if(tv.form=='linear'){
         log.a=numeric(L)
         log.a[c(1:A)]=log.a0
         log.a[c(A+1):c(L-A)]=seq(log.a0,log.a0*(1+p.change),length.out=N)
         log.a[c(L-A+1):L]=log.a0*(1+p.change)
       }
-      if(form=='rw'){
+      if(tv.form=='rw'){
         log.a=numeric(L)
         log.a[c(1:A)]=log.a0
         p.trend=p.change/N
@@ -156,7 +156,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
           log.a[A+t]=log.a[A+t-1]*(1+rnorm(1,p.trend,0.05+abs(p.trend)*2))
         }
       }
-      if(form=='regime'){
+      if(tv.form=='regime'){
         if(is.null(reg.length)==T){print('must specify regime length')}
         log.a=numeric(L)
         log.a=rep(rep(c(log.a0,log.a0*(1+p.change)),each=reg.length),length.out=L)
@@ -164,13 +164,13 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
     } 
     if(tv.par=='b'){
       log.a=rep(log.a0,L)
-      if(form=='linear'){
+      if(tv.form=='linear'){
         smax=numeric(L)
         smax[c(1:A)]=smax0
         smax[c(A+1):c(L-A)]=seq(smax0,smax0*(1+p.change),length.out=N)
         smax[c(L-A+1):L]=smax0*(1+p.change)
       }
-      if(form=='rw'){
+      if(tv.form=='rw'){
         smax=numeric(L)
         smax[c(1:A)]=smax0
         p.trend=p.change/N
@@ -178,7 +178,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
           smax[A+t]=smax[A+t-1]*(1+rnorm(1,p.trend,0.05+abs(p.trend)*2))
         }
       }
-      if(form=='regime'){
+      if(tv.form=='regime'){
         if(is.null(reg.length)==T){print('must specify regime length')}
         smax=numeric(L)
         smax=rep(rep(c(smax0,smax0*(1+p.change)),each=reg.length),length.out=L)
@@ -250,13 +250,13 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
   
   if(tv.par=='a'){
     smax=rep(smax0,L)
-    if(form=='linear'){
+    if(tv.form=='linear'){
       log.a=numeric(L)
       log.a[1:c(A*4)]=log.a0
       log.a[c(A*4+1):c(L-A)]=seq(log.a0,log.a0*(1+p.change),length.out=N)
       log.a[c(L-A+1):L]=log.a0*(1+p.change)
     }
-    if(form=='rw'){
+    if(tv.form=='rw'){
       log.a=numeric(L)
       log.a[1:c(A*4)]=log.a0
       p.trend=p.change/N
@@ -264,7 +264,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
         log.a[A*4+t]=log.a[A*4+t-1]*(1+rnorm(1,p.trend,0.05+abs(p.trend)*2))
       }
     }
-    if(form=='regime'){
+    if(tv.form=='regime'){
       if(is.null(reg.length)==T){print('must specify regime length')}
       log.a=numeric(L)
       log.a[1:c(A*4)]=log.a0
@@ -273,13 +273,13 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
   } 
   if(tv.par=='b'){
     log.a=rep(log.a0,L)
-    if(form=='linear'){
+    if(tv.form=='linear'){
       smax=numeric(L)
       smax[1:c(A*4)]=smax0
       smax[c(A*4+1):c(L-A)]=seq(smax0,smax0*(1+p.change),length.out=N-A)
       smax[c(L-A+1):L]=smax0*(1+p.change)
     }
-    if(form=='rw'){
+    if(tv.form=='rw'){
       smax=numeric(L)
       smax[1:c(A*4)]=smax0
       p.trend=p.change/N
@@ -287,7 +287,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
         smax[A*4+t]=smax[A*4+t-1]*(1+rnorm(1,p.trend,0.05+abs(p.trend)*2))
       }
     }
-    if(form=='regime'){
+    if(tv.form=='regime'){
       if(is.null(reg.length)==T){print('must specify regime length')}
       smax=numeric(L)
       smax[1:c(A*4)]=smax0

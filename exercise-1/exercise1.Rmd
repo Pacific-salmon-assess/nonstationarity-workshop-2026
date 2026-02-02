@@ -518,7 +518,7 @@ In some cases, the form of nonstationarity may be much more abrupt than what we'
 
 Another nonstationary model form tries to capture these 'regime shift' dynamics using a hidden Markov model (HMM) framework. The HMM is a tool to measure 'hidden states' that governs a system's dynamics. In our case we may expect that there are potentially 2 (or more) regimes that dictate salmon population dynamics: a low productivity and high productivity state. Since we do not necessarily know which state we are in at a given time point we model the probability of being in any given state over time.
 
-We won't get into the detailed statistics behind the HMM for this, but in basic terms the model works by having $k$=2 (or more) governing system parameter states (e.g. 2 estimates of $log(\alpha)$, or ($S_{max}$, or both) and estimates of a $k$x$k$ transition matrix:  
+We won't get into the detailed statistics behind the HMM for this (see (here)[https://luisdamiano.github.io/stancon18/hmm_stan_tutorial.pdf] if you want a thorough explanaton), but in basic terms the model works by having $k$=2 (or more) governing system parameter states (e.g. 2 estimates of $log(\alpha)$, or ($S_{max}$, or both) and estimates of a $k$x$k$ transition matrix:  
 
 |           |           |
 |:---------:|:---------:|  
