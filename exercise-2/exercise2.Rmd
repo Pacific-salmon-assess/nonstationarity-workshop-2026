@@ -61,8 +61,8 @@ Let's use a familiar scenario where productivity ($log(\alpha)$) or capacity ($S
 
 ```{r, prod decline - tv smsy and tv umsy,fig.width=6,fig.height=10}
 #Ricker parameters
-log.a0=1.5 #initial productivity
-p.change=-0.5 #proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
+log.a0=1.2 #initial productivity
+p.change=-0.85 #proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
 smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
@@ -91,48 +91,56 @@ Imagine then how harvest in a salmon fishery may be set based on these reference
 
 If we then think about how non-stationary versions of these reference points can be translated into a harvest control rule - the result is that these reference points then become 'moving targets' based on estimates from the statistical information in the time-series.
 
-We can visualize a simplistic harvest control rule - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental or recreational or First Nations catch), with a harvest target beyond that limit based on some fraction of $U_{msy}$ - here plotted for 3 different time-points with different base Ricker parameters:
+We can visualize a harvest control rule that is fairly common - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental or recreational or First Nations catch), with a harvest target beyond that limit that ramps up toward some fraction of $U_{msy}$ based on the run size - here plotted for 3 different time-points with different base Ricker parameters:
+
+Key parameters include our standard Ricker spawner-recruit parameters, that influence the reference points that feed into the harvest control rule.
+
+Additionaly we have 'U.min' the minimum harvest rate (below the escapement goal), 'eg.limit' - the escapement goal, as a fraction of $S_{msy}$, 'upper.tar' - the upper run size where the maximum harvest rate is achieved, as a fraction of $S_{msy}$, and 'target.ER' - the maximum harvest rate, as a fraction of $U_{msy}$.
 
 ```{r, hcr - nonstationary version,fig.width=6,fig.height=5}
+#Ricker parameters
 log.a=c(0.5,1,1.5)
 smax0=c(5000)
 smsy=smsyCalc(log.a,1/smax0)
 umsy=umsyCalc(log.a)
 
-U.min=0.2*umsy
+#Harvest control rule parameters
+U.min=0.025
 eg.limit=1*smsy
+upper.tar=2*smsy
 target.ER=1*umsy
 
-plot(c(0,1)~c(0,7000),ylab='Target harvest',xlab='Run size',type='n')
-lines(rep(U.min[1],2)~c(0,eg.limit[1]),lwd=2,col='goldenrod')
-lines(rep(target.ER[1],2)~c(eg.limit[1],7000),lwd=2,col='goldenrod')
-lines(c(U.min[1],target.ER[1])~rep(eg.limit[1],2),lwd=2,col='goldenrod')
-lines(rep(U.min[2],2)~c(0,eg.limit[2]),lwd=2,col='darkred')
-lines(rep(target.ER[2],2)~c(eg.limit[2],7000),lwd=2,col='darkred')
-lines(c(U.min[2],target.ER[2])~rep(eg.limit[2],2),lwd=2,col='darkred')
-lines(rep(U.min[3],2)~c(0,eg.limit[3]),lwd=2,col='navy')
-lines(rep(target.ER[3],2)~c(eg.limit[3],7000),lwd=2,col='navy')
-lines(c(U.min[3],target.ER[3])~rep(eg.limit[3],2),lwd=2,col='navy')
-text(x=par('usr')[2]*0.9,y=target.ER[1]*1.15,paste('Umsy=',round(umsy[1],2)),col='goldenrod')
-text(x=par('usr')[2]*0.9,y=target.ER[2]*1.15,paste('Umsy=',round(umsy[2],2)),col='darkred')
-text(x=par('usr')[2]*0.9,y=target.ER[3]*1.15,paste('Umsy=',round(umsy[3],2)),col='navy')
-text(x=eg.limit[1],y=target.ER[1]*1.15,paste('Smsy=',round(smsy[1],0)),col='goldenrod')
-text(x=eg.limit[2],y=target.ER[2]*1.15,paste('Smsy=',round(smsy[2],0)),col='darkred')
-text(x=eg.limit[3],y=target.ER[3]*1.15,paste('Smsy=',round(smsy[3],0)),col='navy')
-
+plot(c(0,1)~c(0,smax0*1.5),ylab='Target harvest',xlab='Run size',type='n')
+lines(rep(U.min,2)~c(0,eg.limit[3]),lwd=2)
+lines(c(U.min,target.ER[1])~c(eg.limit[1],upper.tar[1]),lwd=2,col='goldenrod')
+lines(rep(target.ER[1],2)~c(upper.tar[1],smax0*1.5),lwd=2,col='goldenrod')
+lines(c(U.min,target.ER[2])~c(eg.limit[2],upper.tar[2]),lwd=2,col='darkred')
+lines(rep(target.ER[2],2)~c(upper.tar[2],smax0*1.5),lwd=2,col='darkred')
+lines(c(U.min,target.ER[3])~c(eg.limit[3],upper.tar[3]),lwd=2,col='navy')
+lines(rep(target.ER[3],2)~c(upper.tar[3],smax0*1.5),lwd=2,col='navy')
+text(x=par('usr')[2]*0.9,y=target.ER[1]*1.1,paste('Umsy=',round(umsy[1],2)),col='goldenrod',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER[2]*1.1,paste('Umsy=',round(umsy[2],2)),col='darkred',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER[3]*1.1,paste('Umsy=',round(umsy[3],2)),col='navy',cex=0.8)
+text(x=eg.limit[1],y=0.005,paste('Smsy=',round(smsy[1],0)),col='goldenrod',cex=0.8)
+text(x=eg.limit[2],y=0.005,paste('Smsy=',round(smsy[2],0)),col='darkred',cex=0.8)
+text(x=eg.limit[3],y=0.005,paste('Smsy=',round(smsy[3],0)),col='navy',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85,'time point 3',col='goldenrod',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, 'time point 2',col='darkred',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, 'time point 1',col='navy',cex=0.8)
 
 ```
 
-Note - that changes to $S_{max}$ will change the escapement goal and reduced exploitation trigger, but not the harvest target based on $U_{msy1}$.
+Note - that changes to $S_{max}$ will change the escapement goal and shift when exploitation begins to increase with run size, but not the harvest target based on $U_{msy1}$.
 
 From the above we can see 2 main themes: that lower estimates of $S_{msy}$ will result in lowering the escapement goal trigger to lower levels of abundance, while lower estimates of $U_{msy}$ will reduce the harvest target.
 
-Estimates of these two reference points are not *fixed* in the traditional Ricker spawner-recruit model, as the prevailing parameters will also adjust as new observations are included - but the sensitivity of parameter estimates to new observations should be much less than the non-stationary variants of the Ricker model (i.e. random walk or hidden Markov variants). This point will become more obvious when we consider that over time stock assessment will reassess spawner-recruit dynamics using updated information, which we will simulate in a closed-loop simulation.
+Estimates of these two reference points are not *fixed* in the traditional Ricker spawner-recruit model, as the prevailing parameters will also adjust as new observations are included - but the sensitivity of parameter estimates to new observations should be much less than the non-stationary variants of the Ricker model (i.e. random walk or hidden Markov variants). This point will become more obvious when we consider that over time stock assessment will reassess spawner-recruit dynamics using updated information, which we will simulate in our closed-loop simulation.
 
+We can explore the potential outcomes of assessing reference points based on non-stationary or traditional forms of the Ricker model in a management-strategy evaluation (or closed-loop simulation. We have created a function for this workshop ('salmon_sim.tv_hcr') to simulate spawner-recruit dynamics as per the previous simulations, but with harvest now dictated by a simple ramped harvest control rule like what was illustrated in the previous section as well as built-in estimation of Ricker parameters according to the user's chosen estimation model. This recreates the 'loop' between salmon population dynamics, management system, and stock assessment techniques reminiscent of a real world fishery. 
 
-We can explore them the potential outcomes of assessing reference points based on non-stationary or traditional forms of the Ricker model in a management-strategy evaluation (or closed-loop simulation. We have created a function for this workshop ('salmon_sim.tv_hcr') to simulate spawner-recruit dynamics as per the previous simulations, but with harvest now dictated by a simple harvest control rule like what was illustrated in the previous section as well as built-in estimation of Ricker parameters according to the user's chosen estimation model. This recreates the 'loop' between salmon population dynamics, management system, and stock assessment techniques reminiscent of a real world fishery. 
+You can specify the maximum harvest target based on some fraction of $U_{msy}$ - according to 'U.scalar' (which when set to 1 equals the exact estimate of $U_{msy}$) and the escapement goal trigger based on a fraction of estimated $S_{msy}$ - according to 'eg.scalar' (which when set to 1 equals the exact estimate of $S_{msy}$). When run sizes are detected to be below the escapement goal, it will default to a lower scalar on $U_{msy}$ ('U.min') as a minimum harvest rate. For run sizes above the set escapement goal in a given year, harvest rate will be set up to the maximum harvest target based on the run size relative to the 'upper.tar.scalar', which equals a fraction of estimated $S_{msy}$ (e.g. 2 = double $S_{msy}$), any run sizes beyond this target are simply harvested at the maximum harvest rate. In all cases there are stochastic variations in realized exploitation from the estimated harvest target. 
 
-You can specify the harvest target based on some fraction of $U_{msy}$ - according to 'er.tar.scalar' (which when set to 1 equals the exact estimate of $U_{msy}$) and the escapement goal trigger based on a fraction of estimated $S_{msy}$ - according to 'eg.scalar' (which when set to 1 equals the exact estimate of $S_{msy}$). When run sizes are detected to be below the escapement goal, it will default to a lower scalar on $U_{msy}$ ('low.scalar') as a minimum harvest rate when run size is below the escapement goal. In all cases there are stochastic variations in realized exploitation from the harvest target. Within the simulation, reference points can be estimated and set by 3 different types of spawner-recruit models: 'stable' (traditional Ricker model), 'rw' (random walk variant), or 'hmm' (hidden Markov variant), with 'hcr.par' dictating what time-varying parameter you wish to allow for the assessment. The models will be re-fit to the simulated data every X years based on 'assess.freq', with a default of 10 years. For the 'rw' and 'hmm' model assessments, the calculated reference points are the average of the estimates throughout the assessment period - so .e.g if 'assess.freq' = 10, then each assessment takes the average of the last 10 years for $U_{msy}$ and $S_{msy}$ as its best estimate for these two model variants. In the case of 'hmm' models, this would be the average of the predicted regime sequence and parameters for each regime (e.g. it could be the mean perhaps 8 estimates of a 'low' regime and 2 estimates of a 'high' regime over that period).
+Within the simulation, reference points can be estimated and set by 3 different types of spawner-recruit models: 'stable' (traditional Ricker model), 'rw' (random walk variant), or 'hmm' (hidden Markov variant), with 'hcr.par' dictating what time-varying parameter you wish to allow for the assessment (e.g. 'a' for productivity, 'b' for capacity, or 'both' for the HMM variant). The models will be re-fit to the simulated data every X years based on 'assess.freq', with a default of 10 years. For the 'rw' and 'hmm' model assessments, the calculated reference points are the average of the estimates throughout the assessment period - so .e.g if 'assess.freq' = 10, then each assessment takes the average of the last 10 years for $U_{msy}$ and $S_{msy}$ as its best estimate for these two model variants. In the case of 'hmm' models, this would be the average of the predicted regime sequence and parameters for each regime (e.g. it could be the mean of perhaps 8 estimates of a 'low' regime and 2 estimates of a 'high' regime over that period).
 
 Note that the simulations now start with 20 years of seed data (4 generations) at stable dynamics and randomized exploitation to allow for an initial assessment of reference points. The spawner-recruit dynamics are dictated by similar parameters (e.g. 'tv.par' for 'a', 'b', 'both', representing changes in $log(\alpha)$, $S_{max}$ or both parameters - available in the 'regime' scenario only) and magnitudes of change ('p.change', and 'p.change2' for capacity in the 'both' regime scenario) as in the simulation functions from exercise 1.
 
@@ -149,12 +157,14 @@ N=50 #length of simulation
 
 eg.scalar=1 #escapement goal as a fraction of Smsy - ie. 1 = 1*Smsy
 assess.freq=10 #years between reference point re-assessments
-upper.tar.scalar=1 #harvest target above escapement goal scalar = 1*Umsy
-lower.tar.scalar=0.2 #harvest target below escapement goal scalar = 0.2*Umsy
+upper.tar.scalar=2 #run size, as a fraction of Smsy, to maximize harvest rate - ie. 2 = 2*Smsy
+U.scalar=1 #max. harvest target, as a fraction of Umsy
+U.min=0.025 #minimum harvest, applied below escapement goal
 
-mse.prod.stable=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
 
-mse.prod.ns=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+mse.prod.stable=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+
+mse.prod.ns=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
 
 ```
 

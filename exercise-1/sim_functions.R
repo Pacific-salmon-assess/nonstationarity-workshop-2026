@@ -124,7 +124,7 @@ salmon_sim=function(log.a,smax,sigma,N,form=c('static','autocorr'),rho=NA){
   return(df)
 }
 
-salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.change2,form=c('linear','rw','regime'),reg.length=NULL){
+salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.change2,tv.form=c('linear','rw','regime'),reg.length=NULL){
   
     #age structure
     #this accounts for different maturations as is typical for most salmon species
@@ -234,7 +234,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.cha
   return(df)
 }
 
-salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p.change2,form=c('linear','rw','regime'),reg.length=NULL,hcr.form=c('stable','rw','hmm'),hcr.par=c('a','b','both'),assess.freq=10,eg.scalar=1,upper.tar.scalar=1.5,U.scalar=1,U.min=0.025){
+salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.change2,tv.form=c('linear','rw','regime'),reg.length=NULL,hcr.form=c('stable','rw','hmm'),hcr.par=c('a','b','both'),assess.freq=10,eg.scalar=1,upper.tar.scalar=1.5,U.scalar=1,U.min=0.025){
   
   #age structure
   #this accounts for different maturations as is typical for most salmon species
@@ -389,17 +389,11 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,par=c('a','b','both'),p.change,p
     }
     
     if(Rs[t]<Smsy.est[t]*eg.scalar){
-    U[t]=plogis(rnorm(1,qlogis(U.min),abs(qlogis(U.min)*0.1)))
+      U[t]=plogis(rnorm(1,qlogis(U.min),abs(qlogis(U.min)*0.1)))
     }else if(Rs[t]>Smsy.est[t]*eg.scalar&Rs[t]<Smsy.est[t]*upper.tar.scalar){
-      
+      U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar*(Rs[t]/Smsy.est[t]*upper.tar.scalar)),abs(qlogis(Umsy.est[t]*U.scalar*(Rs[t]/Smsy.est[t]*upper.tar.scalar))*0.1)))
     }else if(Rs[t]>Smsy.est[t]*upper.tar.scalar){
       U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar),abs(qlogis(Umsy.est[t]*U.scalar)*0.1)))
-    }
-    
-    if(Rs[t]>Smsy.est[t]){
-      U[t]=plogis(rnorm(1,qlogis(upper.tar.scalar*Umsy.est[t]),abs(qlogis(upper.tar.scalar*Umsy.est[t])*0.1)))
-    }else{
-      U[t]=plogis(rnorm(1,qlogis(lower.tar.scalar*Umsy.est[t]),abs(qlogis(upper.tar.scalar*Umsy.est[t])*0.1)))
     }
     
     #for each year, we will harvest the run, get the remaining spawning abundance

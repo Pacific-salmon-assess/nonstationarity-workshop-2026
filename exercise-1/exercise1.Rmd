@@ -381,7 +381,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear')
+df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear')
 
 ns.prod.fit1=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
 #ns.prod.fit1=ricker_rw_stan(data=df.lin.prod,tv.par='a')
@@ -412,7 +412,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.lin.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='b',form='linear')
+df.lin.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='b',tv.form='linear')
 
 ns.smax.fit1=ricker_rw_TMB(data=df.lin.smax,tv.par='b',silent=T)
 #ns.smax.fit1=ricker_rw_stan(data=df.lin.smax,tv.par='b')
@@ -439,7 +439,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.rw.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='rw')
+df.rw.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='rw')
 
 ns.prod.fit3=ricker_rw_TMB(data=df.rw.prod,tv.par='a',silent=T)
 #ns.prod.fit3=ricker_rw_stan(data=df.rw.prod,tv.par='a')
@@ -458,7 +458,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.rw.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='b',form='rw')
+df.rw.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='b',tv.form='rw')
 
 ns.smax.fit3=ricker_rw_TMB(data=df.rw.smax,tv.par='b',silent=T)
 #ns.smax.fit3=ricker_rw_stan(data=df.rw.smax,tv.par='b')
@@ -539,7 +539,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.reg.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='regime',reg.length=8)
+df.reg.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='regime',reg.length=8)
 
 hmm.fit.prod=ricker_hmm_TMB(data=df.reg.prod,tv.par='a',k_regime=2,silent=T)
 
@@ -602,7 +602,7 @@ p.change2=-0.5#proprtional change in capacity, -0.75 = -75% (on the log-scale), 
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.reg.b=salmon_sim.tv(log.a0=log.a0,p.change=p.change,p.change2=p.change2,smax0=smax0,sigma=sigma,N=N,par='both',form='regime',reg.length=8)
+df.reg.b=salmon_sim.tv(log.a0=log.a0,p.change=p.change,p.change2=p.change2,smax0=smax0,sigma=sigma,N=N,tv.par='both',tv.form='regime',reg.length=8)
 
 hmm.fit.b=ricker_hmm_TMB(data=df.reg.b,tv.par='both',k_regime=2,silent=T)
 
