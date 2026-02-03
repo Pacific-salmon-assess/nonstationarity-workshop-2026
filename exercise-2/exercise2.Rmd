@@ -49,8 +49,8 @@ smsy.b=smsyCalc(log.a0,1/smax)
 umsy=umsyCalc(log.a)
 
 par(mfrow=c(2,2))
-plot(smsy.a~log.a,type='l',lwd=2,bty='l')
-plot(smsy.b~smax,type='l',lwd=2,bty='l')
+plot(smsy.a~log.a,type='l',lwd=2,bty='l',ylab ='smsy')
+plot(smsy.b~smax,type='l',lwd=2,bty='l',ylab ='smsy')
 plot(umsy~log.a,type='l',lwd=2,bty='l',ylim=c(0,1))
 plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='umsy',ylim=c(0,1))
 ```
@@ -67,7 +67,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear')
+df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear')
 
 ns.prod.fit1=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
 #ns.prod.fit1=ricker_rw_stan(data=df.lin.prod,tv.par='a')
@@ -162,9 +162,9 @@ U.scalar=1 #max. harvest target, as a fraction of Umsy
 U.min=0.025 #minimum harvest, applied below escapement goal
 
 
-mse.prod.stable=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+mse.prod.st=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
 
-mse.prod.ns=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+mse.prod.ns=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
 
 ```
 
@@ -172,14 +172,14 @@ We can examine how the estimated reference points track the true values - these 
 
 ```{r, ref pt tracking in closed loop sim,fig.width=6,fig.height=10}
 par(mfrow=c(2,1))
-plot(mse.prod.stable$umsy.true,ylim=c(0,1),type='l',lwd=2,xlab='year of simulation',ylab='Umsy')
-lines(mse.prod.stable$umsy.est,lwd=2,col='navy')
+plot(mse.prod.st$umsy.true,ylim=c(0,1),type='l',lwd=2,xlab='year of simulation',ylab='Umsy')
+lines(mse.prod.st$umsy.est,lwd=2,col='navy')
 lines(mse.prod.ns$umsy.est,lwd=2,col='darkred')
 text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.15,'Stable',col='navy')
 text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.1,'Non-stationary',col='darkred')
 
-plot(mse.prod.stable$smsy.true,ylim=c(min(c(mse.prod.stable$smsy.true,mse.prod.stable$smsy.est,mse.prod.ns$smsy.est)),max(c(mse.prod.stable$smsy.true,mse.prod.stable$smsy.est,mse.prod.ns$smsy.est))),type='l',lwd=2,xlab='year of simulation',ylab='Smsy')
-lines(mse.prod.stable$smsy.est,lwd=2,col='navy')
+plot(mse.prod.st$smsy.true,ylim=c(min(c(mse.prod.st$smsy.true,mse.prod.st$smsy.est,mse.prod.ns$smsy.est)),max(c(mse.prod.st$smsy.true,mse.prod.st$smsy.est,mse.prod.ns$smsy.est))),type='l',lwd=2,xlab='year of simulation',ylab='Smsy')
+lines(mse.prod.st$smsy.est,lwd=2,col='navy')
 lines(mse.prod.ns$smsy.est,lwd=2,col='darkred')
 text(x=par('usr')[2]*0.1,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.8,'Stable',col='navy')
 text(x=par('usr')[2]*0.1,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.85,'Non-stationary',col='darkred')
@@ -190,66 +190,74 @@ Notably, the estimated reference points for both the stable and non-stationary R
 We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference ponts are estimated (indicated by the coloured lines) relative to their true simulation reference points (indicated by the points) in the simulation:
 
 ```{r, stable and nonstationary hcr, fig.width=6,fig.height=10}
-tp=c(1,round(nrow(mse.prod.stable)/2),nrow(mse.prod.stable)) #time slice at t=1, half way, final
+tp=c(1,round(nrow(mse.prod.st)/2),nrow(mse.prod.st)) #time slice at t=1, half way, final
 
-U.min.st=lower.tar.scalar*mse.prod.stable$umsy.est
-U.min.ns=lower.tar.scalar*mse.prod.ns$umsy.est
-
-eg.limit.st=eg.scalar*mse.prod.stable$smsy.est
+eg.limit.st=eg.scalar*mse.prod.st$smsy.est
 eg.limit.ns=eg.scalar*mse.prod.ns$smsy.est
+upper.tar.st=upper.tar.scalar*mse.prod.st$smsy.est
+upper.tar.ns=upper.tar.scalar*mse.prod.ns$smsy.est
 
-target.ER.st=upper.tar.scalar*mse.prod.stable$umsy.est
-target.ER.ns=upper.tar.scalar*mse.prod.ns$umsy.est
+target.ER.st=U.scalar*mse.prod.st$umsy.est
+target.ER.ns=U.scalar*mse.prod.ns$umsy.est
 
 par(mfrow=c(2,1))
 #stable Ricker model plot
-plot(c(0,1)~c(0,2*max(eg.limit.st)),ylab='Target harvest',xlab='Run size',type='n',main='Stable Ricker model')
-lines(rep(U.min.st[tp[1]],2)~c(0,eg.limit.st[tp[1]]),lwd=2,col='goldenrod')
-lines(rep(target.ER.st[tp[1]],2)~c(eg.limit.st[tp[1]],2*max(eg.limit.st)),lwd=2,col='goldenrod')
-lines(c(U.min.st[tp[1]],target.ER.st[tp[1]])~rep(eg.limit.st[tp[1]],2),lwd=2,col='goldenrod')
-lines(rep(U.min.st[tp[2]],2)~c(0,eg.limit.st[tp[2]]),lwd=2,col='darkred')
-lines(rep(target.ER.st[tp[2]],2)~c(eg.limit.st[tp[2]],2*max(eg.limit.st)),lwd=2,col='darkred')
-lines(c(U.min.st[tp[2]],target.ER.st[tp[2]])~rep(eg.limit.st[tp[2]],2),lwd=2,col='darkred')
-lines(rep(U.min.st[tp[3]],2)~c(0,eg.limit.st[tp[3]]),lwd=2,col='navy')
-lines(rep(target.ER.st[tp[3]],2)~c(eg.limit.st[tp[3]],2*max(eg.limit.st)),lwd=2,col='navy')
-lines(c(U.min.st[tp[3]],target.ER.st[tp[3]])~rep(eg.limit.st[tp[3]],2),lwd=2,col='navy')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='goldenrod')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='navy')
-text(x=par('usr')[2]*0.9,y=target.ER.st[tp[1]]*1.05,paste('Umsy=',round(mse.prod.stable$umsy.est[tp[1]],2)),col='goldenrod')
-text(x=par('usr')[2]*0.9,y=target.ER.st[tp[2]]*1.05,paste('Umsy=',round(mse.prod.stable$umsy.est[tp[2]],2)),col='darkred')
-text(x=par('usr')[2]*0.9,y=target.ER.st[tp[3]]*1.05,paste('Umsy=',round(mse.prod.stable$umsy.est[tp[3]],2)),col='navy')
-text(x=eg.limit.st[tp[1]],y=target.ER.st[tp[1]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[1]],0)),col='goldenrod')
-text(x=eg.limit.st[tp[2]],y=target.ER.st[tp[2]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[2]],0)),col='darkred')
-text(x=eg.limit.st[tp[3]],y=target.ER.st[tp[3]]*1.05,paste('Smsy=',round(mse.prod.stable$smsy.est[tp[3]],0)),col='navy')
-points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=2,bg='goldenrod')
-points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
-points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=2,bg='navy')
+plot(c(0,1)~c(0,2*max(upper.tar.st[tp])),ylab='Target harvest',xlab='Run size',type='n',main='Stable Ricker model')
+lines(mse.prod.st$harvest.rate~mse.prod.st$run.size,col=adjustcolor('darkgray',alpha.f=0.5))
+points(mse.prod.st$harvest.rate~mse.prod.st$run.size)
+text(x=mse.prod.st$run.size,y=mse.prod.st$harvest.rate+.02,mse.prod.st$by,cex=0.5)
+lines(rep(U.min,2)~c(0,max(eg.limit.st[tp])),lwd=2)
+lines(c(U.min,target.ER.st[tp[1]])~c(eg.limit.st[tp[1]],upper.tar.st[tp[1]]),lwd=2,col='navy')
+lines(c(U.min,target.ER.st[tp[1]])~c(eg.limit.st[tp[1]],upper.tar.st[tp[1]]),lwd=2,col='navy')
+lines(rep(target.ER.st[tp[1]],2)~c(upper.tar.st[tp[1]],2*max(upper.tar.st)),lwd=2,col='navy')
+lines(c(U.min,target.ER.st[tp[2]])~c(eg.limit.st[tp[2]],upper.tar.st[tp[2]]),lwd=2,col='darkred')
+lines(c(U.min,target.ER.st[tp[2]])~c(eg.limit.st[tp[2]],upper.tar.st[tp[2]]),lwd=2,col='darkred')
+lines(rep(target.ER.st[tp[2]],2)~c(upper.tar.st[tp[2]],2*max(upper.tar.st)),lwd=2,col='darkred')
+lines(c(U.min,target.ER.st[tp[3]])~c(eg.limit.st[tp[3]],upper.tar.st[tp[3]]),lwd=2,col='goldenrod')
+lines(c(U.min,target.ER.st[tp[3]])~c(eg.limit.st[tp[3]],upper.tar.st[tp[3]]),lwd=2,col='goldenrod')
+lines(rep(target.ER.st[tp[3]],2)~c(upper.tar.st[tp[3]],2*max(upper.tar.st)),lwd=2,col='goldenrod')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='goldenrod',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='navy',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER.st[tp[3]]*1.05,paste(round(mse.prod.st$umsy.est[tp[3]],2)),col='goldenrod',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER.st[tp[2]]*1.05,paste(round(mse.prod.st$umsy.est[tp[2]],2)),col='darkred',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER.st[tp[1]]*1.05,paste(round(mse.prod.st$umsy.est[tp[1]],2)),col='navy',cex=0.8)
+text(x=eg.limit.st[tp[3]],y=0,paste(round(mse.prod.st$smsy.est[tp[3]],0)),col='goldenrod',cex=0.8)
+text(x=eg.limit.st[tp[2]],y=-0.01,paste(round(mse.prod.st$smsy.est[tp[2]],0)),col='darkred',cex=0.8)
+text(x=eg.limit.st[tp[1]],y=0.01,paste(round(mse.prod.st$smsy.est[tp[1]],0)),col='navy',cex=0.8)
+points(mse.prod.st$umsy.true[tp[3]]~mse.prod.st$smsy.true[tp[3]],pch=21,cex=2,bg='goldenrod')
+points(mse.prod.st$umsy.true[tp[2]]~mse.prod.st$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
+points(mse.prod.st$umsy.true[tp[1]]~mse.prod.st$smsy.true[tp[1]],pch=21,cex=2,bg='navy')
+points(mse.prod.st$harvest.rate~mse.prod.st$run.size)
+text(x=mse.prod.st$run.size*1.02,y=mse.prod.st$harvest.rate*1.02,mse.prod.st$by,cex=0.5)
 
 #nonstationary Ricker model plot
-plot(c(0,1)~c(0,2*max(eg.limit.ns)),ylab='Target harvest',xlab='Run size',type='n',main='Non-stationary Ricker model')
-lines(rep(U.min.ns[tp[1]],2)~c(0,eg.limit.ns[tp[1]]),lwd=2,col='goldenrod')
-lines(rep(target.ER.ns[tp[1]],2)~c(eg.limit.ns[tp[1]],2*max(eg.limit.ns)),lwd=2,col='goldenrod')
-lines(c(U.min.ns[tp[1]],target.ER.ns[tp[1]])~rep(eg.limit.ns[tp[1]],2),lwd=2,col='goldenrod')
-lines(rep(U.min.ns[tp[2]],2)~c(0,eg.limit.ns[tp[2]]),lwd=2,col='darkred')
-lines(rep(target.ER.ns[tp[2]],2)~c(eg.limit.ns[tp[2]],2*max(eg.limit.ns)),lwd=2,col='darkred')
-lines(c(U.min.ns[tp[2]],target.ER.ns[tp[2]])~rep(eg.limit.ns[tp[2]],2),lwd=2,col='darkred')
-lines(rep(U.min.ns[tp[3]],2)~c(0,eg.limit.ns[tp[3]]),lwd=2,col='navy')
-lines(rep(target.ER.ns[tp[3]],2)~c(eg.limit.ns[tp[3]],2*max(eg.limit.ns)),lwd=2,col='navy')
-lines(c(U.min.ns[tp[3]],target.ER.ns[tp[3]])~rep(eg.limit.ns[tp[3]],2),lwd=2,col='navy')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='goldenrod')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='navy')
-text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[1]]*1.05,paste('Umsy=',round(mse.prod.ns$umsy.est[tp[1]],2)),col='goldenrod')
-text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[2]]*1.05,paste('Umsy=',round(mse.prod.ns$umsy.est[tp[2]],2)),col='darkred')
-text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[3]]*1.05,paste('Umsy=',round(mse.prod.ns$umsy.est[tp[3]],2)),col='navy')
-text(x=eg.limit.ns[tp[1]],y=target.ER.ns[tp[1]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[1]],0)),col='goldenrod')
-text(x=eg.limit.ns[tp[2]],y=target.ER.ns[tp[2]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[2]],0)),col='darkred')
-text(x=eg.limit.ns[tp[3]],y=target.ER.ns[tp[3]]*1.05,paste('Smsy=',round(mse.prod.ns$smsy.est[tp[3]],0)),col='navy')
-points(mse.prod.stable$umsy.true[tp[1]]~mse.prod.stable$smsy.true[tp[1]],pch=21,cex=2,bg='goldenrod')
-points(mse.prod.stable$umsy.true[tp[2]]~mse.prod.stable$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
-points(mse.prod.stable$umsy.true[tp[3]]~mse.prod.stable$smsy.true[tp[3]],pch=21,cex=2,bg='navy')
-
+plot(c(0,1)~c(0,2*max(upper.tar.ns[tp])),ylab='Target harvest',xlab='Run size',type='n',main='Non-stationary Ricker model')
+lines(mse.prod.ns$harvest.rate~mse.prod.ns$run.size,col=adjustcolor('darkgray',alpha.f=0.5))
+points(mse.prod.ns$harvest.rate~mse.prod.ns$run.size)
+text(x=mse.prod.ns$run.size,y=mse.prod.ns$harvest.rate+.02,mse.prod.ns$by,cex=0.5)
+lines(rep(U.min,2)~c(0,max(eg.limit.ns[tp])),lwd=2)
+lines(c(U.min,target.ER.ns[tp[1]])~c(eg.limit.ns[tp[1]],upper.tar.ns[tp[1]]),lwd=2,col='navy')
+lines(c(U.min,target.ER.ns[tp[1]])~c(eg.limit.ns[tp[1]],upper.tar.ns[tp[1]]),lwd=2,col='navy')
+lines(rep(target.ER.ns[tp[1]],2)~c(upper.tar.ns[tp[1]],2*max(upper.tar.ns)),lwd=2,col='navy')
+lines(c(U.min,target.ER.ns[tp[2]])~c(eg.limit.ns[tp[2]],upper.tar.ns[tp[2]]),lwd=2,col='darkred')
+lines(c(U.min,target.ER.ns[tp[2]])~c(eg.limit.ns[tp[2]],upper.tar.ns[tp[2]]),lwd=2,col='darkred')
+lines(rep(target.ER.ns[tp[2]],2)~c(upper.tar.ns[tp[2]],2*max(upper.tar.ns)),lwd=2,col='darkred')
+lines(c(U.min,target.ER.ns[tp[3]])~c(eg.limit.ns[tp[3]],upper.tar.ns[tp[3]]),lwd=2,col='goldenrod')
+lines(c(U.min,target.ER.ns[tp[3]])~c(eg.limit.ns[tp[3]],upper.tar.ns[tp[3]]),lwd=2,col='goldenrod')
+lines(rep(target.ER.ns[tp[3]],2)~c(upper.tar.ns[tp[3]],2*max(upper.tar.ns)),lwd=2,col='goldenrod')
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='goldenrod',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred',cex=0.8)
+text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='navy',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[3]]*1.05,paste(round(mse.prod.ns$umsy.est[tp[3]],2)),col='goldenrod',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[2]]*1.05,paste(round(mse.prod.ns$umsy.est[tp[2]],2)),col='darkred',cex=0.8)
+text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[1]]*1.05,paste(round(mse.prod.ns$umsy.est[tp[1]],2)),col='navy',cex=0.8)
+text(x=eg.limit.ns[tp[3]],y=0,paste(round(mse.prod.ns$smsy.est[tp[3]],0)),col='goldenrod',cex=0.8)
+text(x=eg.limit.ns[tp[2]],y=-0.01,paste(round(mse.prod.ns$smsy.est[tp[2]],0)),col='darkred',cex=0.8)
+text(x=eg.limit.ns[tp[1]],y=0.01,paste(round(mse.prod.ns$smsy.est[tp[1]],0)),col='navy',cex=0.8)
+points(mse.prod.ns$umsy.true[tp[3]]~mse.prod.ns$smsy.true[tp[3]],pch=21,cex=2,bg='goldenrod')
+points(mse.prod.ns$umsy.true[tp[2]]~mse.prod.ns$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
+points(mse.prod.ns$umsy.true[tp[1]]~mse.prod.ns$smsy.true[tp[1]],pch=21,cex=2,bg='navy')
 ```
 
 You will likely notice some large differences in how the key reference points adjust through time according to either the stable and non-stationary Ricker models. 
@@ -263,31 +271,22 @@ Though understanding how the estimates from our various spawner-recruit models m
 We can empirically assess the potential trade-off between mean spawner abundance and mean catch using either the stable or non-stationary Ricker model assessments:
 
 ```{r, spawners vs catch - stable and non stationary,fig.width=6,fig.height=5}
-#stable catch and spawner abundance
-mean.catch.st=mean(mse.prod.stable$catch)
-sd.catch.st=sd(mse.prod.stable$catch)
+#scaled -catch 
+scaled.catch.st=mean(mse.prod.st$catch/max(c(mse.prod.st$catch,mse.prod.ns$catch)))
+scaled.catch.ns=mean(mse.prod.ns$catch/max(c(mse.prod.st$catch,mse.prod.ns$catch)))
 
-mean.spn.st=mean(mse.prod.stable$S)
-sd.spn.st=sd(mse.prod.stable$S)
+#proprtion of time spawners exceed escapement goal
+prop.spn.st=sum(ifelse(mse.prod.st$S>mse.prod.st$smsy.true*eg.scalar,1,0))/nrow(mse.prod.st)
+prop.spn.ns=sum(ifelse(mse.prod.ns$S>mse.prod.ns$smsy.true*eg.scalar,1,0))/nrow(mse.prod.ns)
 
-#non nsationary catch and spawner abundance
-mean.catch.ns=mean(mse.prod.ns$catch)
-sd.catch.ns=sd(mse.prod.ns$catch)
 
-mean.spn.ns=mean(mse.prod.ns$S)
-sd.spn.ns=sd(mse.prod.ns$S)
-
-plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(min(c(mean.catch.st,mean.catch.ns,mean.spn.st,mean.spn.ns))*0.75,max(c(mean.catch.st,mean.catch.ns,mean.spn.st,mean.spn.ns))*1.25),xaxt='n',ylab='value',xlab='')
-lines(c(mean.catch.st-sd.catch.st,mean.catch.st+sd.catch.st)~rep(0.9,2),col='navy')
-lines(c(mean.spn.st-sd.spn.st,mean.spn.st+sd.spn.st)~rep(1.9,2),col='navy')
-lines(c(mean.catch.ns-sd.catch.ns,mean.catch.ns+sd.catch.ns)~rep(1.1,2),col='darkred')
-lines(c(mean.spn.ns-sd.spn.ns,mean.spn.ns+sd.spn.ns)~rep(2.1,2),col='darkred')
-lines(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),lwd=2,col='navy')
-points(c(mean.catch.st,mean.spn.st)~c(0.9,1.9),pch=21,bg='navy',cex=2)
-lines(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),lwd=2,col='darkred')
-points(c(mean.catch.ns,mean.spn.ns)~c(1.1,2.1),pch=21,bg='darkred',cex=2)
-mtext(side=1,'Catch',at=1,line=1)
-mtext(side=1,'Spawners',at=2,line=1)
+plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(0,1),xaxt='n',ylab='Scaled to max. observed (C) or Proportion of years (S)',xlab='')
+lines(c(scaled.catch.st,prop.spn.st)~c(0.95,1.95),lwd=2,col='navy')
+points(c(scaled.catch.st,prop.spn.st)~c(0.95,1.95),pch=21,bg='navy',cex=2)
+lines(c(scaled.catch.ns,prop.spn.ns)~c(1.05,2.05),lwd=2,col='darkred')
+points(c(scaled.catch.ns,prop.spn.ns)~c(1.05,2.05),pch=21,bg='darkred',cex=2)
+mtext(side=1,'Scaled Catch',at=1,line=1)
+mtext(side=1,'Prop. years above EG',at=2,line=1)
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
 ```
@@ -298,7 +297,7 @@ Since this previous example only runs a single scenario, and there is significan
 
 Try altering the simulation parameters to other magnitudes or forms of parameter change, and assessment types, to explore how these trade-offs may alter according to the specific simulation scenarios.
 
-```{r, closed loop sims segment, fig.width=6,fig.height=10,warning=FALSE}
+```{r, closed loop sims segment, fig.width=6,fig.height=5,warning=FALSE}
 log.a0=1.5 #initial productivity
 p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
 smax0=5000 #initial smax
@@ -322,48 +321,31 @@ m.spn.st=numeric(iter);m.spn.ns=numeric(iter)
 sd.spn.st=numeric(iter);sd.spn.ns=numeric(iter)
 
 for(i in 1:iter){
-  sims.st[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+  sims.st[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
   
-  sims.ns[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,lower.tar.scalar=lower.tar.scalar)
+  sims.ns[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+
 
   #calculate sim specific mean & sd of catch and spawner abundance
-  m.catch.st[i]=mean(sims.st[[i]]$catch)
-  m.catch.ns[i]=mean(sims.ns[[i]]$catch)
-  sd.catch.st[i]=sd(sims.st[[i]]$catch)
-  sd.catch.ns[i]=sd(sims.ns[[i]]$catch)
-  
-  m.spn.st[i]=mean(sims.st[[i]]$S)
-  m.spn.ns[i]=mean(sims.ns[[i]]$S)
-  sd.spn.st[i]=sd(sims.st[[i]]$S)
-  sd.spn.ns[i]=sd(sims.ns[[i]]$S)
+  mean(mse.prod.st$catch/max(c(mse.prod.st$catch,mse.prod.ns$catch)))
+  m.catch.st[i]=mean(sims.st[[i]]$catch/max(c(sims.st[[i]]$catch,sims.ns[[i]]$catch)))
+  m.catch.ns[i]=mean(sims.ns[[i]]$catch/max(c(sims.st[[i]]$catch,sims.ns[[i]]$catch)))
+  m.spn.st[i]= sum(ifelse(sims.st[[i]]$S>sims.st[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.st[[i]])
+  m.spn.ns[i]= sum(ifelse(sims.ns[[i]]$S>sims.ns[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.ns[[i]])
+ 
 }
 
-par(mfrow=c(2,1))
-plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(min(c(median(m.catch.st),median(m.catch.ns),median(m.spn.st),median(m.spn.ns)))*0.25,max(c(median(m.catch.st),median(m.catch.ns),median(m.spn.st),median(m.spn.ns)))*1.75),xaxt='n',ylab='value',xlab='')
-lines(c(median(m.catch.st)-sd(m.catch.st)*2,median(m.catch.st)+sd(m.catch.st)*2)~rep(0.9,2),col='navy')
-lines(c(median(m.spn.st)-sd(m.spn.st)*2,median(m.spn.st)+sd(m.spn.st)*2)~rep(1.9,2),col='navy')
-lines(c(median(m.catch.ns)-sd(m.catch.ns)*2,median(m.catch.ns)+sd(m.catch.ns)*2)~rep(1.1,2),col='darkred')
-lines(c(median(m.spn.ns)-sd(m.spn.ns)*2,median(m.spn.ns)+sd(m.spn.ns)*2)~rep(2.1,2),col='darkred')
-lines(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),lwd=2,col='navy')
-points(c(median(m.catch.st),median(m.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=2)
-lines(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),lwd=2,col='darkred')
-points(c(median(m.catch.ns),median(m.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=2)
-mtext(side=1,'Catch',at=1,line=1)
-mtext(side=1,'Spawners',at=2,line=1)
-text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
-text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
-
-plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(min(c(median(sd.catch.st),median(sd.catch.ns),median(sd.spn.st),median(sd.spn.ns)))*0.25,max(c(median(sd.catch.st),median(sd.catch.ns),median(sd.spn.st),median(sd.spn.ns)))*1.75),xaxt='n',ylab='value',xlab='')
-lines(c(median(sd.catch.st)-sd(sd.catch.st)*2,median(sd.catch.st)+sd(sd.catch.st)*2)~rep(0.9,2),col='navy')
-lines(c(median(sd.spn.st)-sd(sd.spn.st)*2,median(sd.spn.st)+sd(sd.spn.st)*2)~rep(1.9,2),col='navy')
-lines(c(median(sd.catch.ns)-sd(sd.catch.ns)*2,median(sd.catch.ns)+sd(sd.catch.ns)*2)~rep(1.1,2),col='darkred')
-lines(c(median(sd.spn.ns)-sd(sd.spn.ns)*2,median(sd.spn.ns)+sd(sd.spn.ns)*2)~rep(2.1,2),col='darkred')
-lines(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),lwd=2,col='navy')
-points(c(median(sd.catch.st),median(sd.spn.st))~c(0.9,1.9),pch=21,bg='navy',cex=2)
-lines(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),lwd=2,col='darkred')
-points(c(median(sd.catch.ns),median(sd.spn.ns))~c(1.1,2.1),pch=21,bg='darkred',cex=2)
-mtext(side=1,'Catch st. dev.',at=1,line=1)
-mtext(side=1,'Spawners st. dev.',at=2,line=1)
+plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(0,1),xaxt='n',ylab='Scaled to max. observed (C) or Proportion of years (S)',xlab='')
+lines(c(median(m.catch.st)-sd(m.catch.st),median(m.catch.st)+sd(m.catch.st))~rep(0.95,2),col='navy')
+lines(c(median(m.spn.st)-sd(m.spn.st),median(m.spn.st)+sd(m.spn.st))~rep(1.95,2),col='navy')
+lines(c(median(m.catch.ns)-sd(m.catch.ns),median(m.catch.ns)+sd(m.catch.ns))~rep(1.05,2),col='darkred')
+lines(c(median(m.spn.ns)-sd(m.spn.ns),median(m.spn.ns)+sd(m.spn.ns))~rep(2.05,2),col='darkred')
+lines(c(median(m.catch.st),median(m.spn.st))~c(0.95,1.95),lwd=2,col='navy')
+points(c(median(m.catch.st),median(m.spn.st))~c(0.95,1.95),pch=21,bg='navy',cex=2)
+lines(c(median(m.catch.ns),median(m.spn.ns))~c(1.05,2.05),lwd=2,col='darkred')
+points(c(median(m.catch.ns),median(m.spn.ns))~c(1.05,2.05),pch=21,bg='darkred',cex=2)
+mtext(side=1,'Scaled Catch',at=1,line=1)
+mtext(side=1,'Prop. years above EG',at=2,line=1)
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
 text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
 ```

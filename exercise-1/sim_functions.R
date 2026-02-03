@@ -328,7 +328,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
   #run it for the first 3 generations to generate initial S-R data for assessments - random exploitation based on initial Umsy
   for(t in c(A+1):c(A*4)){ #from years max age + 1
     
-    U[t]=runif(1,0.25*Umsy.true[t],1.25*Umsy.true[t])
+    U[t]=plogis(rnorm(1,qlogis(Umsy.true[t]),0.6))
       
     #for each year, we will harvest the run, get the remaining spawning abundance
     S[t]=Rs[t]*(1-U[t]) # spawning abundance (escapement) is run size minus harvest rate
@@ -389,13 +389,13 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
     }
     
     if(Rs[t]<Smsy.est[t]*eg.scalar){
-      U[t]=plogis(rnorm(1,qlogis(U.min),abs(qlogis(U.min)*0.1)))
+      U[t]=plogis(rnorm(1,qlogis(U.min),0.4))
     }else if(Rs[t]>Smsy.est[t]*eg.scalar&Rs[t]<Smsy.est[t]*upper.tar.scalar){
-      U=U.min+Umsy.est[t]*U.scalar*((Rs[t]-Smsy.est[t]*eg.scalar)/(Smsy.est[t]*upper.tar.scalar-Smsy.est[t]*eg.scalar))
-      U=min(U,Umsy.est[t]*U.scalar)
-      U[t]=plogis(rnorm(1,qlogis(U),abs(qlogis(U))*0.1))
+      U.it=U.min+Umsy.est[t]*U.scalar*((Rs[t]-Smsy.est[t]*eg.scalar)/(Smsy.est[t]*upper.tar.scalar-Smsy.est[t]*eg.scalar))
+      U.it=min(U.it,Umsy.est[t]*U.scalar)
+      U[t]=plogis(rnorm(1,qlogis(U.it),0.4))
     }else if(Rs[t]>Smsy.est[t]*upper.tar.scalar){
-      U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar),abs(qlogis(Umsy.est[t]*U.scalar)*0.1)))
+      U[t]=plogis(rnorm(1,qlogis(Umsy.est[t]*U.scalar),0.4))
     }
     
     #for each year, we will harvest the run, get the remaining spawning abundance
