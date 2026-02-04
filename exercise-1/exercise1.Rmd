@@ -482,7 +482,7 @@ Nonstationary productivity:
 ```{r, tv est - linear crossed mod sel - prod scenario}
 #tv-productivity generating data - tv productivity and tv smax fit
 
-knitr::kable(data.frame("model" = c("simulated-prod", "estimated"), 
+knitr::kable(data.frame("model" = c("sim-prod/est-prod", "sim-prod/est-smax"), 
                         "AICc" = c(ns.prod.fit1$AICc, ns.smax.fit2$AICc), 
                         "AICc_weight" = model_weights(c(ns.prod.fit1$AICc,ns.smax.fit2$AICc),
                                                       form='TMB')), 
@@ -492,7 +492,7 @@ knitr::kable(data.frame("model" = c("simulated-prod", "estimated"),
 Nonstationairy capacity:  
 ```{r, tv est - linear crossed mod sel - smax scenario}
 #tv-smax generating data - tv productivity and tv smax fit
-knitr::kable(data.frame("model" = c("simulated", "estimated"), 
+knitr::kable(data.frame("model" = c("sim-smax/est-prod", "sim-smax/est-smax"), 
                         "AICc" = c(ns.prod.fit2$AICc, ns.smax.fit1$AICc), 
                         "AICc_weight" = model_weights(c(ns.prod.fit2$AICc,ns.smax.fit1$AICc),form='TMB')), 
            digits = 2)
