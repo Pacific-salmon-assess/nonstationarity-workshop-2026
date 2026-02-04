@@ -364,12 +364,12 @@ In this first simulation, we will develop spawner-recruit dynamics under a linea
 ```{r, tv sim - linear prod}
 #Ricker parameters
 log.a0=1.5 #initial productivity
-p.change=-0.5 #proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
+p.change=-0.75 #proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
 smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par="tv.par",form="tv.form")
+df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par="a",tv.form="linear")
 
 ns.prod.fit1=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
 #ns.prod.fit1=ricker_rw_stan(data=df.lin.prod,tv.par='a')
@@ -400,7 +400,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.lin.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='b',form='linear')
+df.lin.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='b',tv.form='linear')
 
 ns.smax.fit1=ricker_rw_TMB(data=df.lin.smax,tv.par='b',silent=T)
 #ns.smax.fit1=ricker_rw_stan(data=df.lin.smax,tv.par='b')
@@ -427,7 +427,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.rw.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='rw')
+df.rw.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='rw')
 
 ns.prod.fit3=ricker_rw_TMB(data=df.rw.prod,tv.par='a',silent=T)
 #ns.prod.fit3=ricker_rw_stan(data=df.rw.prod,tv.par='a')
@@ -446,7 +446,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.rw.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='b',form='rw')
+df.rw.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='b',tv.form='rw')
 
 ns.smax.fit3=ricker_rw_TMB(data=df.rw.smax,tv.par='b',silent=T)
 #ns.smax.fit3=ricker_rw_stan(data=df.rw.smax,tv.par='b')
@@ -482,7 +482,7 @@ Nonstationary productivity:
 ```{r, tv est - linear crossed mod sel - prod scenario}
 #tv-productivity generating data - tv productivity and tv smax fit
 
-knitr::kable(data.frame("model" = c("simulated", "estimated"), 
+knitr::kable(data.frame("model" = c("simulated-prod", "estimated"), 
                         "AICc" = c(ns.prod.fit1$AICc, ns.smax.fit2$AICc), 
                         "AICc_weight" = model_weights(c(ns.prod.fit1$AICc,ns.smax.fit2$AICc),
                                                       form='TMB')), 
@@ -529,7 +529,7 @@ smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.reg.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,par='a',form='regime',reg.length=8)
+df.reg.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='regime',reg.length=8)
 
 hmm.fit.prod=ricker_hmm_TMB(data=df.reg.prod,tv.par='a',k_regime=2,silent=T)
 
@@ -548,7 +548,7 @@ hmm.fit.prod$qij
 
 The first number *1,1* is the probability, when in regime 1 (low productivity regime) of staying in that regime from year-to-year, while *1,2* is the probability of exiting that regime. The opposite elements, *2,1* and *2,2*, correspond to leaving or staying in regime 2 (high productivity) - each row the probabilities sum to 1.
 
-We can extract time-series of both the probability of being in each regime through time (`probregime`), as well as the most likely regime (`regime`) at each time point as outputs of the model:
+We can extract time-series of both the probability of being in each regime through time (`probregime`), as well as the most likely regime (`regime`) at each time point (indicated by the column or place in the vector) as outputs of the model:
 
 ```{r, regime time-series}
 round(hmm.fit.prod$probregime,2)
@@ -585,14 +585,14 @@ The `samEst` plotting function `hmm_sr_plot()` will show the $k$ estimate spawne
 ```{r, prod-cap regime hmm,fig.height=8,fig.width=6}
 #Ricker parameters
 log.a0=1.5 #initial productivity
-p.change=-0.5#proprtional change in productivity, -0.75 = -75% (on the log-scale), 0.5 = +50%
+p.change=-0.75#proprtional change in productivity, -0.75 = -75% (on the log-scale), 0.5 = +50%
 smax0=5000 #initial smax
 p.change2=-0.5#proprtional change in capacity, -0.75 = -75% (on the log-scale), 0.5 = +50%
 
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
-df.reg.b=salmon_sim.tv(log.a0=log.a0,p.change=p.change,p.change2=p.change2,smax0=smax0,sigma=sigma,N=N,par='both',form='regime',reg.length=8)
+df.reg.b=salmon_sim.tv(log.a0=log.a0,p.change=p.change,p.change2=p.change2,smax0=smax0,sigma=sigma,N=N,tv.par='both',tv.form='regime',reg.length=8)
 
 hmm.fit.b=ricker_hmm_TMB(data=df.reg.b,tv.par='both',k_regime=2,silent=T)
 
