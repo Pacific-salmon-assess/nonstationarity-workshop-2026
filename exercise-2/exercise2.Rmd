@@ -13,7 +13,8 @@ The following exercises are intended to give participants a broad understanding 
 
 
 ```{r, simulation functions,echo=FALSE}
-source('../exercise-1/sim_functions.R')
+source('../functions/sim_functions.R')
+source('../functions/plot_functions.R')
 ```
 
 # Non-stationary stock reference points
@@ -110,23 +111,7 @@ eg.limit=1*smsy
 upper.tar=2*smsy
 target.ER=1*umsy
 
-plot(c(0,1)~c(0,smax0*1.5),ylab='Target harvest',xlab='Run size',type='n')
-lines(rep(U.min,2)~c(0,eg.limit[3]),lwd=2)
-lines(c(U.min,target.ER[1])~c(eg.limit[1],upper.tar[1]),lwd=2,col='goldenrod')
-lines(rep(target.ER[1],2)~c(upper.tar[1],smax0*1.5),lwd=2,col='goldenrod')
-lines(c(U.min,target.ER[2])~c(eg.limit[2],upper.tar[2]),lwd=2,col='darkred')
-lines(rep(target.ER[2],2)~c(upper.tar[2],smax0*1.5),lwd=2,col='darkred')
-lines(c(U.min,target.ER[3])~c(eg.limit[3],upper.tar[3]),lwd=2,col='navy')
-lines(rep(target.ER[3],2)~c(upper.tar[3],smax0*1.5),lwd=2,col='navy')
-text(x=par('usr')[2]*0.9,y=target.ER[1]*1.1,paste('Umsy=',round(umsy[1],2)),col='goldenrod',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER[2]*1.1,paste('Umsy=',round(umsy[2],2)),col='darkred',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER[3]*1.1,paste('Umsy=',round(umsy[3],2)),col='navy',cex=0.8)
-text(x=eg.limit[1],y=0.005,paste('Smsy=',round(smsy[1],0)),col='goldenrod',cex=0.8)
-text(x=eg.limit[2],y=0.005,paste('Smsy=',round(smsy[2],0)),col='darkred',cex=0.8)
-text(x=eg.limit[3],y=0.005,paste('Smsy=',round(smsy[3],0)),col='navy',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85,'time point 3',col='goldenrod',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, 'time point 2',col='darkred',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, 'time point 1',col='navy',cex=0.8)
+hcr_plot_example(U.min=U.min,eg.limit=eg.limit,upper.tar=upper.tar,target.ER=target.ER,smsy=smsy,smax0=smax0)
 
 ```
 
@@ -189,75 +174,22 @@ Notably, the estimated reference points for both the stable and non-stationary R
 
 We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference ponts are estimated (indicated by the coloured lines) relative to their true simulation reference points (indicated by the points) in the simulation:
 
-```{r, stable and nonstationary hcr, fig.width=6,fig.height=10}
+```{r, stable and nonstationary hcr, fig.width=10,fig.height=5}
 tp=c(1,round(nrow(mse.prod.st)/2),nrow(mse.prod.st)) #time slice at t=1, half way, final
 
-eg.limit.st=eg.scalar*mse.prod.st$smsy.est
-eg.limit.ns=eg.scalar*mse.prod.ns$smsy.est
-upper.tar.st=upper.tar.scalar*mse.prod.st$smsy.est
-upper.tar.ns=upper.tar.scalar*mse.prod.ns$smsy.est
+eg.limit.st=eg.scalar*mse.prod.st$smsy.est #escapement goals through time for stable simulation
+eg.limit.ns=eg.scalar*mse.prod.ns$smsy.est #escapement goals through time for non-stationary simulation
+upper.tar.st=upper.tar.scalar*mse.prod.st$smsy.est #upper limit beyond which harvest is static at Umsy
+upper.tar.ns=upper.tar.scalar*mse.prod.ns$smsy.est #upper limit beyond which harvest is static at Umsy
 
-target.ER.st=U.scalar*mse.prod.st$umsy.est
-target.ER.ns=U.scalar*mse.prod.ns$umsy.est
+target.ER.st=U.scalar*mse.prod.st$umsy.est #max. harvest rate
+target.ER.ns=U.scalar*mse.prod.ns$umsy.est #max. harvest rate
 
-par(mfrow=c(2,1))
+par(mfrow=c(1,2))
 #stable Ricker model plot
-plot(c(0,1)~c(0,2*max(upper.tar.st[tp])),ylab='Target harvest',xlab='Run size',type='n',main='Stable Ricker model')
-lines(mse.prod.st$harvest.rate~mse.prod.st$run.size,col=adjustcolor('darkgray',alpha.f=0.5))
-points(mse.prod.st$harvest.rate~mse.prod.st$run.size)
-text(x=mse.prod.st$run.size,y=mse.prod.st$harvest.rate+.02,mse.prod.st$by,cex=0.5)
-lines(rep(U.min,2)~c(0,max(eg.limit.st[tp])),lwd=2)
-lines(c(U.min,target.ER.st[tp[1]])~c(eg.limit.st[tp[1]],upper.tar.st[tp[1]]),lwd=2,col='navy')
-lines(c(U.min,target.ER.st[tp[1]])~c(eg.limit.st[tp[1]],upper.tar.st[tp[1]]),lwd=2,col='navy')
-lines(rep(target.ER.st[tp[1]],2)~c(upper.tar.st[tp[1]],2*max(upper.tar.st)),lwd=2,col='navy')
-lines(c(U.min,target.ER.st[tp[2]])~c(eg.limit.st[tp[2]],upper.tar.st[tp[2]]),lwd=2,col='darkred')
-lines(c(U.min,target.ER.st[tp[2]])~c(eg.limit.st[tp[2]],upper.tar.st[tp[2]]),lwd=2,col='darkred')
-lines(rep(target.ER.st[tp[2]],2)~c(upper.tar.st[tp[2]],2*max(upper.tar.st)),lwd=2,col='darkred')
-lines(c(U.min,target.ER.st[tp[3]])~c(eg.limit.st[tp[3]],upper.tar.st[tp[3]]),lwd=2,col='goldenrod')
-lines(c(U.min,target.ER.st[tp[3]])~c(eg.limit.st[tp[3]],upper.tar.st[tp[3]]),lwd=2,col='goldenrod')
-lines(rep(target.ER.st[tp[3]],2)~c(upper.tar.st[tp[3]],2*max(upper.tar.st)),lwd=2,col='goldenrod')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='goldenrod',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='navy',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER.st[tp[3]]*1.05,paste(round(mse.prod.st$umsy.est[tp[3]],2)),col='goldenrod',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER.st[tp[2]]*1.05,paste(round(mse.prod.st$umsy.est[tp[2]],2)),col='darkred',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER.st[tp[1]]*1.05,paste(round(mse.prod.st$umsy.est[tp[1]],2)),col='navy',cex=0.8)
-text(x=eg.limit.st[tp[3]],y=0,paste(round(mse.prod.st$smsy.est[tp[3]],0)),col='goldenrod',cex=0.8)
-text(x=eg.limit.st[tp[2]],y=-0.01,paste(round(mse.prod.st$smsy.est[tp[2]],0)),col='darkred',cex=0.8)
-text(x=eg.limit.st[tp[1]],y=0.01,paste(round(mse.prod.st$smsy.est[tp[1]],0)),col='navy',cex=0.8)
-points(mse.prod.st$umsy.true[tp[3]]~mse.prod.st$smsy.true[tp[3]],pch=21,cex=2,bg='goldenrod')
-points(mse.prod.st$umsy.true[tp[2]]~mse.prod.st$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
-points(mse.prod.st$umsy.true[tp[1]]~mse.prod.st$smsy.true[tp[1]],pch=21,cex=2,bg='navy')
-points(mse.prod.st$harvest.rate~mse.prod.st$run.size)
-text(x=mse.prod.st$run.size*1.02,y=mse.prod.st$harvest.rate*1.02,mse.prod.st$by,cex=0.5)
-
+hcr_plot_est(sim.df=mse.prod.st,tp=tp,eg.limit=eg.limit.st,upper.tar=upper.tar.st,target.ER=target.ER.st,U.min=U.min,title='Stable Ricker model')
 #nonstationary Ricker model plot
-plot(c(0,1)~c(0,2*max(upper.tar.ns[tp])),ylab='Target harvest',xlab='Run size',type='n',main='Non-stationary Ricker model')
-lines(mse.prod.ns$harvest.rate~mse.prod.ns$run.size,col=adjustcolor('darkgray',alpha.f=0.5))
-points(mse.prod.ns$harvest.rate~mse.prod.ns$run.size)
-text(x=mse.prod.ns$run.size,y=mse.prod.ns$harvest.rate+.02,mse.prod.ns$by,cex=0.5)
-lines(rep(U.min,2)~c(0,max(eg.limit.ns[tp])),lwd=2)
-lines(c(U.min,target.ER.ns[tp[1]])~c(eg.limit.ns[tp[1]],upper.tar.ns[tp[1]]),lwd=2,col='navy')
-lines(c(U.min,target.ER.ns[tp[1]])~c(eg.limit.ns[tp[1]],upper.tar.ns[tp[1]]),lwd=2,col='navy')
-lines(rep(target.ER.ns[tp[1]],2)~c(upper.tar.ns[tp[1]],2*max(upper.tar.ns)),lwd=2,col='navy')
-lines(c(U.min,target.ER.ns[tp[2]])~c(eg.limit.ns[tp[2]],upper.tar.ns[tp[2]]),lwd=2,col='darkred')
-lines(c(U.min,target.ER.ns[tp[2]])~c(eg.limit.ns[tp[2]],upper.tar.ns[tp[2]]),lwd=2,col='darkred')
-lines(rep(target.ER.ns[tp[2]],2)~c(upper.tar.ns[tp[2]],2*max(upper.tar.ns)),lwd=2,col='darkred')
-lines(c(U.min,target.ER.ns[tp[3]])~c(eg.limit.ns[tp[3]],upper.tar.ns[tp[3]]),lwd=2,col='goldenrod')
-lines(c(U.min,target.ER.ns[tp[3]])~c(eg.limit.ns[tp[3]],upper.tar.ns[tp[3]]),lwd=2,col='goldenrod')
-lines(rep(target.ER.ns[tp[3]],2)~c(upper.tar.ns[tp[3]],2*max(upper.tar.ns)),lwd=2,col='goldenrod')
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.85, paste('year', tp[3]),col='goldenrod',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.9, paste('year', tp[2]),col='darkred',cex=0.8)
-text(x=par('usr')[2]*0.1,y=par('usr')[4]*0.95, paste('year', tp[1]),col='navy',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[3]]*1.05,paste(round(mse.prod.ns$umsy.est[tp[3]],2)),col='goldenrod',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[2]]*1.05,paste(round(mse.prod.ns$umsy.est[tp[2]],2)),col='darkred',cex=0.8)
-text(x=par('usr')[2]*0.9,y=target.ER.ns[tp[1]]*1.05,paste(round(mse.prod.ns$umsy.est[tp[1]],2)),col='navy',cex=0.8)
-text(x=eg.limit.ns[tp[3]],y=0,paste(round(mse.prod.ns$smsy.est[tp[3]],0)),col='goldenrod',cex=0.8)
-text(x=eg.limit.ns[tp[2]],y=-0.01,paste(round(mse.prod.ns$smsy.est[tp[2]],0)),col='darkred',cex=0.8)
-text(x=eg.limit.ns[tp[1]],y=0.01,paste(round(mse.prod.ns$smsy.est[tp[1]],0)),col='navy',cex=0.8)
-points(mse.prod.ns$umsy.true[tp[3]]~mse.prod.ns$smsy.true[tp[3]],pch=21,cex=2,bg='goldenrod')
-points(mse.prod.ns$umsy.true[tp[2]]~mse.prod.ns$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
-points(mse.prod.ns$umsy.true[tp[1]]~mse.prod.ns$smsy.true[tp[1]],pch=21,cex=2,bg='navy')
+hcr_plot_est(sim.df=mse.prod.ns,tp=tp,eg.limit=eg.limit.ns,upper.tar=upper.tar.ns,target.ER=target.ER.ns,U.min=U.min,title='Non-stationary Ricker model')
 ```
 
 You will likely notice some large differences in how the key reference points adjust through time according to either the stable and non-stationary Ricker models. 
@@ -353,3 +285,5 @@ text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-
 Exploring different combinations should give you a sense of how choice of stationary/non-stationary models in setting reference points (and their implementation) may shape management outcomes.
 
 Keep in mind, that these outcomes will also be specific to the particular aspects of the simulation, including factors like the form of harvest control rule we implement here (versus e.g. more complex shapes with multiple trigger points or ramped exploitation rates), the way one estimates reference points in a non-stationary fit (e.g. averaging estimates over the last 1, 2, or more generations; or taking a weighted average, or taking the last value, etc.), the fact that many forms of stochasticity are not included in this simulation function (e.g. age composition is fixed, there is no measurement error in spawner-recruit data, there is no forecasting error for run size when implementing management targets). The outcomes one get can be fairly sensitive to the complex dynamics that are inherent in a coupled system as we have in our salmon populations and fisheries.
+
+We can explore one last form of harvest control rule with stable and non-stationary assessments, and that is combining estimates from both model types. As highlighted previously, the reduction in $U_{msy}$ with productivity tend to be conservative under scenarios of declining productivity, but the concommitant reduction in $S_{msy}$ is the opposite - it encourages lowering the escapement goals to permit more fishing at lower levels of return abundances. We can explore then how using a 'mixed' harvest control rule - where the harvest reference point is set with a non-stationary model, and the biomass reference point (escapement goal) is set with the stable model - may perform under this same scenario. You can change

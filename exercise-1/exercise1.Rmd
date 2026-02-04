@@ -41,7 +41,7 @@ Let's begin by visualizing the sort of spawner-recruit time-series one may obtai
 The simulation is governed by our familiar Ricker parameters ($log(\alpha)$, $S_{max}$, $\sigma$), as well as an option to change the time-series length ($N$). Feel free to alter these parameters and see the resulting changes to the simulated datasets. To get a sense of some real-world distributions of the key parameters you can view some empirical distributions from a meta-analysis of spawner-recruit dynamics [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#2_Stock_parameters_-_static).
 
 ```{r, simulation functions,echo=FALSE}
-source('../exercise-1/sim_functions.R')
+source('../functions/sim_functions.R')
 ```
 
 ```{r, static ricker simulation,fig.width=6,fig.height=8}
