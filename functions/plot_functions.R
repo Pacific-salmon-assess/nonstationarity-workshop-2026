@@ -23,7 +23,7 @@ hcr_plot_est=function(sim.df,tp,eg.limit,upper.tar,U.min,target.ER,title){
   plot(c(0,1)~c(0,2*max(upper.tar[tp])),ylab='Target harvest',xlab='Run size',type='n',main=title)
   lines(sim.df$harvest.rate~sim.df$run.size,col=adjustcolor('darkgray',alpha.f=0.5))
   points(sim.df$harvest.rate~sim.df$run.size)
-  text(x=sim.df$run.size,y=sim.df$harvest.rate+.02,sim.df$by,cex=0.5)
+  text(x=sim.df$run.size,y=sim.df$harvest.rate+.025,sim.df$by,cex=0.5)
   lines(rep(U.min,2)~c(0,max(eg.limit[tp])),lwd=2)
   lines(c(U.min,target.ER[tp[1]])~c(eg.limit[tp[1]],upper.tar[tp[1]]),lwd=2,col='navy')
   lines(c(U.min,target.ER[tp[1]])~c(eg.limit[tp[1]],upper.tar[tp[1]]),lwd=2,col='navy')
@@ -47,5 +47,4 @@ hcr_plot_est=function(sim.df,tp,eg.limit,upper.tar,U.min,target.ER,title){
   points(sim.df$umsy.true[tp[2]]~sim.df$smsy.true[tp[2]],pch=21,cex=2,bg='darkred')
   points(sim.df$umsy.true[tp[1]]~sim.df$smsy.true[tp[1]],pch=21,cex=2,bg='navy')
   points(sim.df$harvest.rate~sim.df$run.size)
-  text(x=sim.df$run.size*1.02,y=sim.df$harvest.rate*1.02,sim.df$by,cex=0.5)
 }

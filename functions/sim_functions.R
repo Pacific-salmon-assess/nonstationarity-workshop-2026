@@ -234,7 +234,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
   return(df)
 }
 
-salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.change2,tv.form=c('linear','rw','regime'),reg.length=NULL,hcr.form=c('stable','rw','hmm'),hcr.par=c('a','b','both'),assess.freq=10,eg.scalar=1,upper.tar.scalar=1.5,U.scalar=1,U.min=0.025){
+salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.change2,tv.form=c('linear','rw','regime'),reg.length=NULL,hcr.form=c('stable','rw','hmm','mixed-rw','mixed-hmm'),hcr.par=c('a','b','both'),assess.freq=10,eg.scalar=1,upper.tar.scalar=1.5,U.scalar=1,U.min=0.025){
   
   #age structure
   #this accounts for different maturations as is typical for most salmon species
@@ -364,6 +364,20 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
     Smsy.est[1:c(A*4)]=est$Smsy[est$regime[c(A*4)]]
     Umsy.est[1:c(A*4)]=est$Umsy[est$regime[c(A*4)]]
   }
+  if(hcr.form=='mixed-rw'){
+    df=data.frame(S=S[1:c(A*4)],by=seq(1,c(A*4)),logRS=logRS[1:c(A*4)])
+    est1=samEst::ricker_TMB(data=df,silent=T,ac=T)
+    est2=samEst::ricker_rw_TMB(data=df,tv.par=hcr.par,silent=T)
+    Smsy.est[1:c(A*4)]=est1$Smsy
+    Umsy.est[1:c(A*4)]=mean(est2$Umsy[c(A*4-assess.freq):c(A*4)]) 
+  }
+  if(hcr.form=='mixed-hmm'){
+    df=data.frame(S=S[1:c(A*4)],by=seq(1,c(A*4)),logRS=logRS[1:c(A*4)])
+    est1=samEst::ricker_TMB(data=df,silent=T,ac=T)
+    est2=samEst::ricker_hmm_TMB(data=df,tv.par=hcr.par,silent=T)
+    Smsy.est[1:c(A*4)]=est1$Smsy
+    Umsy.est[1:c(A*4)]=est2$Umsy[est$regime[c(A*4)]]
+  }
   
   for(t in c(A*4+1):L){ #from years max age + 1
     if(t %% assess.freq == 0){
@@ -382,6 +396,18 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
         est=samEst::ricker_hmm_TMB(data=df,tv.par=hcr.par,silent=T)
         Smsy.est[t]=mean(est$Smsy[est$regime[c(t-assess.freq):c(t-1)]])
         Umsy.est[t]=mean(est$Umsy[est$regime[c(t-assess.freq):c(t-1)]])
+      }else if(hcr.form=='mixed-rw'){
+        df=data.frame(S=S[1:t-1],by=seq(1,t-1),logRS=logRS[1:t-1])
+        est1=samEst::ricker_TMB(data=df,silent=T,ac=T)
+        est2=samEst::ricker_rw_TMB(data=df,tv.par=hcr.par,silent=T)
+        Smsy.est[t]=est1$Smsy
+        Umsy.est[t]=mean(est2$Umsy[c(t-assess.freq):c(t-1)]) 
+      }else if(hcr.form=='mixed-hmm'){
+        df=data.frame(S=S[1:t-1],by=seq(1,t-1),logRS=logRS[1:t-1])
+        est1=samEst::ricker_TMB(data=df,silent=T,ac=T)
+        est2=samEst::ricker_TMB(data=df,tv.par=hcr.par,silent=T)
+        Smsy.est[t]=est1$Smsy
+        Umsy.est[t]=mean(est2$Umsy[est2$regime[c(t-assess.freq):c(t-1)]]) 
       }
     }else{
       Umsy.est[t]=Umsy.est[t-1]
@@ -431,4 +457,8 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
   df=data.frame(S=S,R=R,logRS=logRS,eps=logRS-(log.a-S/smax),by=seq(1:length(S)),loga.t=log.a,smax.t=smax,run.size=Rs,catch=C,harvest.rate=U,smsy.true=Smsy.true,smsy.est=Smsy.est,umsy.true=Umsy.true,umsy.est=Umsy.est)
   
   return(df)
+}
+
+gm_mean=function(x){ #geometric mean
+  return(exp(mean(log(x))))
 }

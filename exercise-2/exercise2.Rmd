@@ -174,7 +174,7 @@ Notably, the estimated reference points for both the stable and non-stationary R
 
 We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference ponts are estimated (indicated by the coloured lines) relative to their true simulation reference points (indicated by the points) in the simulation:
 
-```{r, stable and nonstationary hcr, fig.width=10,fig.height=5}
+```{r, stable and nonstationary hcr, fig.width=6,fig.height=10}
 tp=c(1,round(nrow(mse.prod.st)/2),nrow(mse.prod.st)) #time slice at t=1, half way, final
 
 eg.limit.st=eg.scalar*mse.prod.st$smsy.est #escapement goals through time for stable simulation
@@ -185,7 +185,7 @@ upper.tar.ns=upper.tar.scalar*mse.prod.ns$smsy.est #upper limit beyond which har
 target.ER.st=U.scalar*mse.prod.st$umsy.est #max. harvest rate
 target.ER.ns=U.scalar*mse.prod.ns$umsy.est #max. harvest rate
 
-par(mfrow=c(1,2))
+par(mfrow=c(2,1))
 #stable Ricker model plot
 hcr_plot_est(sim.df=mse.prod.st,tp=tp,eg.limit=eg.limit.st,upper.tar=upper.tar.st,target.ER=target.ER.st,U.min=U.min,title='Stable Ricker model')
 #nonstationary Ricker model plot
@@ -219,8 +219,8 @@ lines(c(scaled.catch.ns,prop.spn.ns)~c(1.05,2.05),lwd=2,col='darkred')
 points(c(scaled.catch.ns,prop.spn.ns)~c(1.05,2.05),pch=21,bg='darkred',cex=2)
 mtext(side=1,'Scaled Catch',at=1,line=1)
 mtext(side=1,'Prop. years above EG',at=2,line=1)
-text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
-text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
 ```
 
 What trade-offs, if any do you find between basing key management reference points in the harvest control rule on either the stable or non-stationary Ricker model estimates?
@@ -238,15 +238,16 @@ N=50 #length of simulation
 
 #common parameters between different assessment model forms to keep comparability:
 
-eg.scalar=1 #escapement goal = 1*Smsy
-assess.freq=10 #years between reference point assessments
-upper.tar.scalar=1 #harvest target above escapement goal scalar = 1*Umsy
-lower.tar.scalar=0.2 #harvest target below escapement goal scalar = 0.2*Umsy
+eg.scalar=1 #escapement goal as a fraction of Smsy - ie. 1 = 1*Smsy
+assess.freq=10 #years between reference point re-assessments
+upper.tar.scalar=2 #run size, as a fraction of Smsy, to maximize harvest rate - ie. 2 = 2*Smsy
+U.scalar=1 #max. harvest target, as a fraction of Umsy
+U.min=0.025 #minimum harvest, applied below escapement goal
 
 sims.st=list() #list to hold outputs for simulations with stable assessment models
 sims.ns=list() #list to hold outputs for simulations with stable assessment models
 
-iter=40 #nynber of simulations to run
+iter=50 #nynber of simulations to run
 m.catch.st=numeric(iter);m.catch.ns=numeric(iter)
 sd.catch=numeric(iter);sd.catch.ns=numeric(iter)
 m.spn.st=numeric(iter);m.spn.ns=numeric(iter)
@@ -259,31 +260,120 @@ for(i in 1:iter){
 
 
   #calculate sim specific mean & sd of catch and spawner abundance
-  mean(mse.prod.st$catch/max(c(mse.prod.st$catch,mse.prod.ns$catch)))
-  m.catch.st[i]=mean(sims.st[[i]]$catch/max(c(sims.st[[i]]$catch,sims.ns[[i]]$catch)))
-  m.catch.ns[i]=mean(sims.ns[[i]]$catch/max(c(sims.st[[i]]$catch,sims.ns[[i]]$catch)))
-  m.spn.st[i]= sum(ifelse(sims.st[[i]]$S>sims.st[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.st[[i]])
+   m.spn.st[i]= sum(ifelse(sims.st[[i]]$S>sims.st[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.st[[i]])
   m.spn.ns[i]= sum(ifelse(sims.ns[[i]]$S>sims.ns[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.ns[[i]])
  
 }
+m.catch.st=as.numeric(lapply(sims.st, function(x) exp(mean(log(x$catch))))) #geometric mean catch per simulation
+m.catch.ns=as.numeric(lapply(sims.ns, function(x) exp(mean(log(x$catch)))))
+sc.catch.st=m.catch.st/max(c(m.catch.st,m.catch.ns))
+sc.catch.ns=m.catch.ns/max(c(m.catch.st,m.catch.ns))
+
 
 plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(0,1),xaxt='n',ylab='Scaled to max. observed (C) or Proportion of years (S)',xlab='')
-lines(c(median(m.catch.st)-sd(m.catch.st),median(m.catch.st)+sd(m.catch.st))~rep(0.95,2),col='navy')
-lines(c(median(m.spn.st)-sd(m.spn.st),median(m.spn.st)+sd(m.spn.st))~rep(1.95,2),col='navy')
-lines(c(median(m.catch.ns)-sd(m.catch.ns),median(m.catch.ns)+sd(m.catch.ns))~rep(1.05,2),col='darkred')
-lines(c(median(m.spn.ns)-sd(m.spn.ns),median(m.spn.ns)+sd(m.spn.ns))~rep(2.05,2),col='darkred')
-lines(c(median(m.catch.st),median(m.spn.st))~c(0.95,1.95),lwd=2,col='navy')
-points(c(median(m.catch.st),median(m.spn.st))~c(0.95,1.95),pch=21,bg='navy',cex=2)
-lines(c(median(m.catch.ns),median(m.spn.ns))~c(1.05,2.05),lwd=2,col='darkred')
-points(c(median(m.catch.ns),median(m.spn.ns))~c(1.05,2.05),pch=21,bg='darkred',cex=2)
+lines(c(mean(sc.catch.st)-sd(sc.catch.st),mean(sc.catch.st)+sd(sc.catch.st))~rep(0.95,2),col='navy')
+lines(c(mean(m.spn.st)-sd(m.spn.st),mean(m.spn.st)+sd(m.spn.st))~rep(1.95,2),col='navy')
+lines(c(mean(sc.catch.ns)-sd(sc.catch.ns),mean(sc.catch.ns)+sd(sc.catch.ns))~rep(1.05,2),col='darkred')
+lines(c(mean(m.spn.ns)-sd(m.spn.ns),mean(m.spn.ns)+sd(m.spn.ns))~rep(2.05,2),col='darkred')
+lines(c(mean(sc.catch.st),mean(m.spn.st))~c(0.95,1.95),lwd=2,col='navy')
+points(c(mean(sc.catch.st),mean(m.spn.st))~c(0.95,1.95),pch=21,bg='navy',cex=2)
+lines(c(mean(sc.catch.ns),mean(m.spn.ns))~c(1.05,2.05),lwd=2,col='darkred')
+points(c(mean(sc.catch.ns),mean(m.spn.ns))~c(1.05,2.05),pch=21,bg='darkred',cex=2)
 mtext(side=1,'Scaled Catch',at=1,line=1)
 mtext(side=1,'Prop. years above EG',at=2,line=1)
-text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
-text(x=par('usr')[1]*1.4,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
 ```
 
 Exploring different combinations should give you a sense of how choice of stationary/non-stationary models in setting reference points (and their implementation) may shape management outcomes.
 
-Keep in mind, that these outcomes will also be specific to the particular aspects of the simulation, including factors like the form of harvest control rule we implement here (versus e.g. more complex shapes with multiple trigger points or ramped exploitation rates), the way one estimates reference points in a non-stationary fit (e.g. averaging estimates over the last 1, 2, or more generations; or taking a weighted average, or taking the last value, etc.), the fact that many forms of stochasticity are not included in this simulation function (e.g. age composition is fixed, there is no measurement error in spawner-recruit data, there is no forecasting error for run size when implementing management targets). The outcomes one get can be fairly sensitive to the complex dynamics that are inherent in a coupled system as we have in our salmon populations and fisheries.
+Keep in mind, that these outcomes will also be specific to the particular aspects of the simulation, including factors like the overall shape of the harvest control rule and how reference points are set in it (note - you can experiment with this, try setting `upper.tar.scalar` equal to `upper.tar.scalar` to create an abrupt transition between full-on or little harvest), the way one estimates reference points in a non-stationary fit (e.g. averaging estimates over the last 1, 2, or more generations; or taking a weighted average, or taking the last value, etc.), the fact that many forms of stochasticity are not included in this simulation function (e.g. age composition is fixed, there is no measurement error in spawner-recruit data, there is no forecasting error for run size when implementing management targets in addition to implementation error in harvest rates). The outcomes one can get can be fairly sensitive to the complex dynamics that are inherent in a coupled system as we have in our salmon populations and fisheries.
 
-We can explore one last form of harvest control rule with stable and non-stationary assessments, and that is combining estimates from both model types. As highlighted previously, the reduction in $U_{msy}$ with productivity tend to be conservative under scenarios of declining productivity, but the concommitant reduction in $S_{msy}$ is the opposite - it encourages lowering the escapement goals to permit more fishing at lower levels of return abundances. We can explore then how using a 'mixed' harvest control rule - where the harvest reference point is set with a non-stationary model, and the biomass reference point (escapement goal) is set with the stable model - may perform under this same scenario. You can change
+We can explore one last form of harvest control rule with stable and non-stationary assessments, and that is combining estimates from both model types. As highlighted previously, the reduction in $U_{msy}$ with productivity tend to be conservative under scenarios of declining productivity, but the concommitant reduction in $S_{msy}$ is the opposite - it encourages lowering the escapement goals to permit more fishing at lower levels of return abundances. We can explore then how using a 'mixed' harvest control rule - where the harvest reference point is set with a non-stationary model, and the biomass reference point (escapement goal) is set with the stable model - may perform under this same scenario. 
+
+You can change `hcr.form` to either `mixed-rw` or `mixed-hmm`, that will estimate a non-stationary $U_{msy}$ as a harvest target with a stable Ricker estimate of $S_{msy}$ to set the escapement goal on the harvest control rule, with all other parameters invoking the same sort of true parameter change and estimation methods as previously.
+
+```{r, closed loop sims mixed hcr, fig.width=6,fig.height=5,warning=FALSE}
+log.a0=1.5 #initial productivity
+p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
+smax0=5000 #initial smax
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+N=50 #length of simulation
+
+#common parameters between different assessment model forms to keep comparability:
+
+eg.scalar=1 #escapement goal as a fraction of Smsy - ie. 1 = 1*Smsy
+assess.freq=10 #years between reference point re-assessments
+upper.tar.scalar=2 #run size, as a fraction of Smsy, to maximize harvest rate - ie. 2 = 2*Smsy
+U.scalar=1 #max. harvest target, as a fraction of Umsy
+U.min=0.025 #minimum harvest, applied below escapement goal
+
+sims.st=list() #list to hold outputs for simulations with stable assessment models
+sims.ns=list() #list to hold outputs for simulations with stable assessment models
+sims.mix=list() #list to hold outputs for simulations with stable assessment models
+
+iter=50 #nynber of simulations to run
+m.catch.st=numeric(iter);m.catch.ns=numeric(iter);m.catch.mix=numeric(iter)
+m.spn.st=numeric(iter);m.spn.ns=numeric(iter);m.spn.mix=numeric(iter)
+
+for(i in 1:iter){
+  sims.st[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='stable',hcr.par=NULL,assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+  
+  sims.ns[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+  
+  sims.mix[[i]]=salmon_sim.tv_hcr(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='a',tv.form='linear',hcr.form='mixed-rw',hcr.par='a',assess.freq=assess.freq,eg.scalar=eg.scalar,upper.tar.scalar=upper.tar.scalar,U.scalar=U.scalar,U.min=U.min)
+
+
+  #calculate sim specific mean & sd of catch and spawner abundance
+  m.spn.st[i]= sum(ifelse(sims.st[[i]]$S>sims.st[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.st[[i]])
+  m.spn.ns[i]= sum(ifelse(sims.ns[[i]]$S>sims.ns[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.ns[[i]])
+  m.spn.mix[i]= sum(ifelse(sims.mix[[i]]$S>sims.mix[[i]]$smsy.true*eg.scalar,1,0))/nrow(sims.mix[[i]])
+ 
+}
+m.catch.st=as.numeric(lapply(sims.st, function(x) exp(mean(log(x$catch))))) #geometric mean catch per simulation
+m.catch.ns=as.numeric(lapply(sims.ns, function(x) exp(mean(log(x$catch)))))
+m.catch.mix=as.numeric(lapply(sims.mix, function(x) exp(mean(log(x$catch)))))
+sc.catch.st=m.catch.st/max(c(m.catch.st,m.catch.ns,m.catch.mix))
+sc.catch.ns=m.catch.ns/max(c(m.catch.st,m.catch.ns,m.catch.mix))
+sc.catch.mix=m.catch.mix/max(c(m.catch.st,m.catch.ns,m.catch.mix))
+
+plot(c(0,1)~c(0.6,2.4),type='n',ylim=c(0,1),xaxt='n',ylab='Scaled to max. observed (C) or Proportion of years (S)',xlab='')
+lines(c(mean(sc.catch.st)-sd(sc.catch.st),mean(sc.catch.st)+sd(sc.catch.st))~rep(0.95,2),col='navy')
+lines(c(mean(m.spn.st)-sd(m.spn.st),mean(m.spn.st)+sd(m.spn.st))~rep(1.95,2),col='navy')
+lines(c(mean(sc.catch.ns)-sd(sc.catch.ns),mean(sc.catch.ns)+sd(sc.catch.ns))~rep(1.05,2),col='darkred')
+lines(c(mean(m.spn.ns)-sd(m.spn.ns),mean(m.spn.ns)+sd(m.spn.ns))~rep(2.05,2),col='darkred')
+lines(c(mean(sc.catch.mix)-sd(sc.catch.mix),mean(sc.catch.mix)+sd(sc.catch.mix))~rep(1,2),col='goldenrod')
+lines(c(mean(m.spn.mix)-sd(m.spn.mix),mean(m.spn.mix)+sd(m.spn.mix))~rep(2,2),col='goldenrod')
+lines(c(mean(sc.catch.st),mean(m.spn.st))~c(0.95,1.95),lwd=2,col='navy')
+points(c(mean(sc.catch.st),mean(m.spn.st))~c(0.95,1.95),pch=21,bg='navy',cex=2)
+lines(c(mean(sc.catch.ns),mean(m.spn.ns))~c(1.05,2.05),lwd=2,col='darkred')
+points(c(mean(sc.catch.ns),mean(m.spn.ns))~c(1.05,2.05),pch=21,bg='darkred',cex=2)
+lines(c(median(sc.catch.mix),median(m.spn.mix))~c(1,2),lwd=2,col='goldenrod')
+points(c(median(sc.catch.mix),median(m.spn.mix))~c(1,2),pch=21,bg='goldenrod',cex=2)
+mtext(side=1,'Scaled Catch',at=1,line=1)
+mtext(side=1,'Prop. years above EG',at=2,line=1)
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.15,'Stable',col='navy')
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.2,'Non-stationary',col='darkred')
+text(x=par('usr')[1]*1.5,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.25,'Mixed',col='goldenrod')
+```
+
+```{r, hcr comp. - stable, ns, mix, fig.width=9,fig.height=9,warning=FALSE}
+tp=c(1,round(nrow(sims.st[[1]])/2),nrow(sims.st[[1]])) #time slice at t=1, half way, final
+
+eg.limit.st=eg.scalar*sims.st[[1]]$smsy.est #escapement goals through time for stable simulation
+eg.limit.ns=eg.scalar*sims.ns[[1]]$smsy.est #escapement goals through time for non-stationary simulation
+eg.limit.mix=eg.scalar*sims.mix[[1]]$smsy.est #escapement goals through time for non-stationary simulation
+
+upper.tar.st=upper.tar.scalar*sims.st[[1]]$smsy.est #upper limit beyond which harvest is static at Umsy
+upper.tar.ns=upper.tar.scalar*sims.ns[[1]]$smsy.est #upper limit beyond which harvest is static at Umsy
+upper.tar.mix=upper.tar.scalar*sims.mix[[1]]$smsy.est #upper limit beyond which harvest is static at Umsy
+
+target.ER.st=U.scalar*sims.st[[1]]$umsy.est #max. harvest rate
+target.ER.ns=U.scalar*sims.ns[[1]]$umsy.est #max. harvest rate
+target.ER.mix=U.scalar*sims.mix[[1]]$umsy.est #max. harvest rate
+
+par(mfrow=c(2,2))
+hcr_plot_est(sim.df=sims.st[[1]],tp=tp,eg.limit=eg.limit.st,upper.tar=upper.tar.st,target.ER=target.ER.st,U.min=U.min,title='Stable Ricker model')
+hcr_plot_est(sim.df=sims.mix[[1]],tp=tp,eg.limit=eg.limit.mix,upper.tar=upper.tar.mix,target.ER=target.ER.mix,U.min=U.min,title='Mixed models')
+hcr_plot_est(sim.df=sims.ns[[1]],tp=tp,eg.limit=eg.limit.ns,upper.tar=upper.tar.ns,target.ER=target.ER.ns,U.min=U.min,title='Non-stationary models')
+```
