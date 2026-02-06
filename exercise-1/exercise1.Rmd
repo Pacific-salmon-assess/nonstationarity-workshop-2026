@@ -75,7 +75,7 @@ We will use various `samEst` functions to estimate this model (and others) from 
 
 There are two forms for model fitting that we included in this package - one using *Template Model Builder* (*TMB*), which uses Laplace approximation of the marginal likelihood to estimate parameter values (i.e. maximum likelihood estimates, MLE), the other form is a Bayesian method using *Stan*. We won't get into great detail about all the nuances of the theory and practice of these two model forms, but the main point for their implementation in `samEst` is that the former will give fast point estimates and has an option for no priors on the parameters, while the latter will give full posterior distributions of parameter estimates - so it's easier to work with the full uncertainty of the parameters and also requires priors on each parameter.
 
-For the stationary form of the Ricker model, the two functions are: `ricker_TMB()` and `ricker_stan()`. You can call up either function (e.g. `??ricker_TMB`) to see the available arguments. For the rest of this exercise, we will use the *TMB* versions for speed and ease, you are welcome to switch these to *Stan* implementations, see the final section of advanced options for those interested.
+For the stationary form of the Ricker model, the two functions are: `ricker_TMB` and `ricker_stan`. You can call up either function (e.g. `??ricker_TMB`) to see the available arguments. For the rest of this exercise, we will use the *TMB* versions for speed and ease, you are welcome to switch these to *Stan* implementations, see the final section of advanced options for those interested.
 
 Fit the *TMB* estimate of the Ricker curve with `samEst`. See [here](https://github.com/Pacific-salmon-assess/samEst?tab=readme-ov-file#install-instructions) for instructions to install `samEst`.  
 
@@ -129,7 +129,7 @@ $$S_{msy} = (1 - LambertW(e^{1-log(\alpha)}))/\beta$$
 
 $$U_{msy} = 1 - LambertW(e^{1-log(\alpha)})$$
 
-In `samEst`, these can be implemented via `smsyCalc()` and `umsyCalc()`, which we will apply to our true known parameters - but these are also standard outputs that are generated from the estimated functions (e.g. `ricker_TMB()`).
+In `samEst`, these can be implemented via `smsyCalc` and `umsyCalc`, which we will apply to our true known parameters - but these are also standard outputs that are generated from the estimated functions (e.g. `ricker_TMB`).
 
 $S_{msy}$:
 
@@ -149,7 +149,7 @@ c(true.umsy, st.fit1$Umsy)
 
 ### Priors  
 
-Note that the default of `ricker_TMB()` applies priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The default $S_{max}$ prior is fairly informative, which we set as a normal distribution, with the mean as half the maximum observed spawner abundance and a standard deviation of double of that same quantity. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
+Note that the default of `ricker_TMB` applies priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The default $S_{max}$ prior is fairly informative, which we set as a normal distribution, with the mean as half the maximum observed spawner abundance and a standard deviation of double of that same quantity. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
 
 In some cases, you may have strong priors derived from external information - e.g. watershed area, or some other estimate. You can set custom priors directly in this function (and others). Here we can see how that works and changes the previous estimate - prior function plotted in blue:
 
@@ -284,21 +284,13 @@ st.fit.ac$rho
 
 ### Model selection  
 
-There are a few ways to gauge whether autocorrelation in recruitment may exist, in part you can (after some practice) visualize it in the residuals, you can test the parameter with the two model forms as well. One way we could potentially discriminate between the two model forms is using model selection criteria, ***which the *samEst* *TMB* model functions provide*** estimates of both the $AIC_c$ and $BIC$, which are estimated as:
+There are a few ways to gauge whether autocorrelation in recruitment may exist, in part you can (after some practice) visualize it in the residuals, you can test the parameter with the two model forms as well. One way we could potentially discriminate between the two model forms is using model selection criteria, which the `samEst` *TMB* model functions provide estimates of for both $AIC_c$ and $BIC$, which are estimated as:
 
 $$AIC_c = -2log(L) + 2k(k+1)/(n-k-1)$$
 
 $$BIC = klog(n) - 2log(L)$$
 
 where $L$ is the model likelihood (estimated from the normal probability density function in our case), $k$ is the number of parameters (so in our comparison the autocorrelation model has +1 parameters), and $n$ is the number of observations. The lower $AIC$ or $BIC$ value, the more support there is for that model.
-
-```{r, ac model selection}
-#autocorrelated data fit with autocorrelation vs. fit with static model
-knitr::kable(data.frame("model" = c("autocorrelated", "static"), 
-                        "AICc" = c(ac.fit.ac$AICc, ac.fit.st$AICc), 
-                        "BIC" = c(st.fit.ac$BIC,st.fit1$BIC)), 
-           digits = 2)
-```
 
 We can further transform these estimates from each model into model 'weights', which give an estimate of the relative difference in likelihood support among models $I$ as:
 
@@ -307,11 +299,13 @@ $$w_i = e^{-AIC_i/2}/\sum(e^{-AIC_{i:I}/2})$$
 We have a `samEst` function, `model_weights()` that will perform this calculation.
 
 ```{r, ac model weights}
-#autocorrelated fit with autocorrelation vs. fit with static model - AIC model weights
-model_weights(c(ac.fit.ac$AICc,ac.fit.st$AICc),form='TMB')
 
-#autocorrelated fit with autocorrelation vs. fit with static model - BIC model weights
-model_weights(c(ac.fit.ac$BIC,ac.fit.st$BIC),form='TMB')
+knitr::kable(data.frame("model" = c("autocorr-sim/autocorrelated-est", "autocorr-sim/stable-est"), 
+                        "AICc" = c(ac.fit.ac$AICc, ac.fit.st$AICc), 
+                        "BIC" = c(ac.fit.ac$BIC,ac.fit.st$BIC), 
+                        "AICc_Weight" = model_weights(c(ac.fit.ac$AICc,ac.fit.st$AICc),form='TMB'), 
+                        "BIC_Weight" = model_weights(c(ac.fit.ac$BIC,ac.fit.st$BIC),form='TMB')), 
+           digits = 2)
 ```
 
 What can you conclude from this? Is there more support for a static or autocorrelated model in this autocorrelated simulation?
@@ -321,7 +315,7 @@ What about when we apply these models in the fully stable system?
 ```{r, st model selection}
 #stable fit with autocorrelation vs. stable fit with static model
 
-knitr::kable(data.frame("model" = c("autocorrelated", "static"), 
+knitr::kable(data.frame("model" = c("stable-sim/autocorrelated-est", "stable-sim/stable-est"), 
                         "AICc" = c(st.fit.ac$AICc, st.fit1$AICc), 
                         "BIC" = c(st.fit.ac$BIC,st.fit1$BIC), 
                         "AICc_Weight" = model_weights(c(st.fit.ac$AICc,st.fit1$AICc),form='TMB'), 
@@ -355,9 +349,9 @@ $$log(R_t/S_t) = log(\alpha) - S_t/S_{max,t} + \epsilon_t$$
 
 The key challenge in these models is that there are now two sources of variance in year-to-year $log(R_t/S_t)$ that arise from both 'low frequency' (i.e. it changes gradually through time) process error ($\sigma_{\omega}$) and 'high frequency' (i.e. it changes rapidly through time - as 'white noise') annual error ($\sigma_{\omega}$) - the latter of which emerges from both sampling effects (i.e. measurement errors in recruits and spawners) as well as true variances in demographic processes among brood cohorts.
 
-These nonstationary models can be fit in `samEst` using the `ricker_rw_TMB()` or `ricker_rw_stan()` functions. To choose between productivity or capacity changes, one must specify the time-varying parameter (`tv.par` as `a` or `b`); one can technically specify `both`, but we discourage this for reasons we will discuss.
+These nonstationary models can be fit in `samEst` using the `ricker_rw_TMB` or `ricker_rw_stan` functions. To choose between productivity or capacity changes, one must specify the time-varying parameter (`tv.par` as `a` or `b`); one can technically specify `both`, but we discourage this for reasons we will discuss.
 
-We will test how well these models can actually capture trend trends in these Ricker parameters using another simulation function made for this workshop - here we can change either intrinsic productivity or capacity to time-varying by specifying `par = a` or `par = b` in this function.
+We will test how well these models can actually capture trend trends in these Ricker parameters using another simulation function made for this workshop - here we can change either intrinsic productivity or capacity to time-varying by specifying `tv.par = a` or `tv.par = b` in this function.
 
 In this first simulation, we will develop spawner-recruit dynamics under a linear change in $\alpha$ and see if we can successfully estimate these changes with the non-stationary (random walk) version of the Ricker model. Here in productivity:
 
@@ -371,12 +365,12 @@ N=50
 
 df.lin.prod=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par="a",tv.form="linear")
 
-ns.prod.fit1=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
-#ns.prod.fit1=ricker_rw_stan(data=df.lin.prod,tv.par='a')
+ns.lin.prod.fit=ricker_rw_TMB(data=df.lin.prod,tv.par='a',silent=T)
+#ns.lin.prod.fit=ricker_rw_stan(data=df.lin.prod,tv.par='a')
 
 #estimate in red
-plot(df.lin.prod$loga.t,type='l',lwd=2,ylab='log(alpha) parameter',xlab='simulation year',ylim=c(min(c(ns.prod.fit1$logalpha,df.lin.prod$loga.t)),max(c(ns.prod.fit1$logalpha,df.lin.prod$loga.t))))
-lines(ns.prod.fit1$logalpha,lwd=2,col='darkred') #predicted
+plot(df.lin.prod$loga.t,type='l',lwd=2,ylab='log(alpha) parameter',xlab='simulation year',ylim=c(min(c(ns.lin.prod.fit$logalpha,df.lin.prod$loga.t)),max(c(ns.lin.prod.fit$logalpha,df.lin.prod$loga.t))))
+lines(ns.lin.prod.fit$logalpha,lwd=2,col='darkred') #predicted
 
 ```
 
@@ -384,10 +378,10 @@ How well does the estimate (red) approximate the true parameter (black) change?
 
 Note - under certain conditions it may fail to fit, either you can try the Stan version (which tends to be more flexible), or simply by re-running the simulated dataset. Regardless, try re-running the above code to see the diversity of estimates one may get in any particular run under the same parameter sets.
 
-You can visualize the spawner-recruit curve fit using the `samEst` function, `rw_sr_plot()`:
+You can visualize the spawner-recruit curve fit using the `samEst` function, `rw_sr_plot`:
 
 ```{r, rw sr plot - prod, fig.width=7,fig.height=9}
-rw_sr_plot(data=df.lin.prod,mod=ns.prod.fit1)
+rw_sr_plot(data=df.lin.prod,mod=ns.lin.prod.fit)
 ```
 
 Next we can try capacity change:
@@ -402,18 +396,51 @@ N=50
 
 df.lin.smax=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par='b',tv.form='linear')
 
-ns.smax.fit1=ricker_rw_TMB(data=df.lin.smax,tv.par='b',silent=T)
-#ns.smax.fit1=ricker_rw_stan(data=df.lin.smax,tv.par='b')
+ns.lin.smax.fit=ricker_rw_TMB(data=df.lin.smax,tv.par='b',silent=T)
+#ns.lin.smax.fit=ricker_rw_stan(data=df.lin.smax,tv.par='b')
 
-plot(df.lin.smax$smax.t,type='l',lwd=2,ylab='Smax parameter',xlab='simulation year',ylim=c(min(c(ns.smax.fit1$Smax,df.lin.smax$smax.t)),max(c(ns.smax.fit1$Smax,df.lin.smax$smax.t))))
-lines(ns.smax.fit1$Smax,lwd=2,col='darkred') #predicted
+plot(df.lin.smax$smax.t,type='l',lwd=2,ylab='Smax parameter',xlab='simulation year',ylim=c(min(c(ns.lin.smax.fit$Smax,df.lin.smax$smax.t)),max(c(ns.lin.smax.fit$Smax,df.lin.smax$smax.t))))
+lines(ns.lin.smax.fit$Smax,lwd=2,col='darkred') #predicted
 ```
 
 ```{r, rw plot smax,fig.width=6,fig.height=8}
-rw_sr_plot(data=df.lin.smax,mod=ns.smax.fit1)
+rw_sr_plot(data=df.lin.smax,mod=ns.lin.smax.fit)
 ```
 
 Does this track better or worse than the productivity change estimate?
+
+Finally, let's try iterating this many times under the same simple linear change scenario in parameters to see the variance one can get in estimation when considering the full stochastic process:
+
+```{r, estimation iteration,fig.width=6,fig.height=10,warning=FALSE}
+#Ricker parameters
+log.a0=1.5 #static productivity
+p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
+smax0=5000 #initial smax
+sigma=0.6 #most stocks range from ~0.3 to 1.5
+N=50
+
+iter=50
+
+par(mfrow=c(2,1))
+#productivity change
+plot(df.lin.prod$loga.t,type='l',lwd=2,ylab='log(alpha) parameter',xlab='simulation year',ylim=c(min(c(ns.lin.prod.fit$logalpha,df.lin.prod$loga.t)),max(c(ns.lin.prod.fit$logalpha,df.lin.prod$loga.t))))
+for(i in 1:iter){
+df.p=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par="a",tv.form="linear")
+est.p=ricker_rw_TMB(data=df.p,tv.par='a',silent=T)
+lines(est.p$logalpha,lwd=2,col=adjustcolor('darkred',alpha.f=0.2)) #predicted
+}
+
+
+#capacity change
+plot(df.lin.smax$smax.t,type='l',lwd=2,ylab='Smax parameter',xlab='simulation year',ylim=c(min(c(ns.lin.smax.fit$Smax,df.lin.smax$smax.t)),max(c(ns.lin.smax.fit$Smax,df.lin.smax$smax.t))))
+for(i in 1:iter){
+df.s=salmon_sim.tv(log.a0=log.a0,p.change=p.change,smax0=smax0,sigma=sigma,N=N,tv.par="b",tv.form="linear")
+est.s=ricker_rw_TMB(data=df.s,tv.par='b',silent=T)
+lines(est.s$Smax,lwd=2,col=adjustcolor('darkred',alpha.f=0.2)) #predicted
+}
+
+
+```
 
 ### Nonlinear directional change  
 
@@ -459,14 +486,14 @@ lines(ns.smax.fit3$Smax,lwd=2,col='darkred')
 In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). Let's apply our estimates to the alternate simulation to see what it estimates (note - the simulation datasets are switched to be mismatched):
 
 ```{r, tv est - linear crossed,fig.width=6,fig.height=8}
-ns.prod.fit2=ricker_rw_TMB(data=df.lin.smax,tv.par='a',silent=T)
+ns.lin.smax.prod.fit=ricker_rw_TMB(data=df.lin.smax,tv.par='a',silent=T)
 
-ns.smax.fit2=ricker_rw_TMB(data=df.lin.prod,tv.par='b',silent=T)
+ns.lin.prod.smax.fit=ricker_rw_TMB(data=df.lin.prod,tv.par='b',silent=T)
 
 par(mfrow=c(2,1))
-plot(ns.prod.fit2$logalpha,type='l',lwd=2,ylab='productivity parameter',xlab='simulation year',col='darkred')
+plot(ns.lin.smax.prod.fit$logalpha,type='l',lwd=2,ylab='productivity parameter',xlab='simulation year',col='darkred')
 lines(df.lin.smax$loga.t,lwd=2) #true prod change
-plot(ns.smax.fit2$Smax,type='l',lwd=2,ylab='Smax parameter',xlab='simulation year',col='darkred')
+plot(ns.lin.prod.smax.fit$Smax,type='l',lwd=2,ylab='Smax parameter',xlab='simulation year',col='darkred')
 lines(df.lin.prod$smax.t,lwd=2) #true prod change
 
 ```
@@ -481,10 +508,11 @@ Similar to our example comparing autocorrelation and stable dynamics, perhaps we
 Nonstationary productivity:  
 ```{r, tv est - linear crossed mod sel - prod scenario}
 #tv-productivity generating data - tv productivity and tv smax fit
+stable.lin.prod.fit=ricker_TMB(data=df.lin.prod,ac=T,silent=T)
 
-knitr::kable(data.frame("model" = c("sim-prod/est-prod", "sim-prod/est-smax"), 
-                        "AICc" = c(ns.prod.fit1$AICc, ns.smax.fit2$AICc), 
-                        "AICc_weight" = model_weights(c(ns.prod.fit1$AICc,ns.smax.fit2$AICc),
+knitr::kable(data.frame("model" = c("sim-prod/est-stable","sim-prod/est-prod", "sim-prod/est-smax"), 
+                        "AICc" = c(stable.lin.prod.fit$AICc,ns.lin.prod.fit$AICc, ns.lin.prod.smax.fit$AICc), 
+                        "AICc_weight" = model_weights(c(stable.lin.prod.fit$AICc,ns.lin.prod.fit$AICc,ns.lin.prod.smax.fit$AICc),
                                                       form='TMB')), 
            digits = 2)
 ```
@@ -492,9 +520,11 @@ knitr::kable(data.frame("model" = c("sim-prod/est-prod", "sim-prod/est-smax"),
 Nonstationairy capacity:  
 ```{r, tv est - linear crossed mod sel - smax scenario}
 #tv-smax generating data - tv productivity and tv smax fit
-knitr::kable(data.frame("model" = c("sim-smax/est-prod", "sim-smax/est-smax"), 
-                        "AICc" = c(ns.prod.fit2$AICc, ns.smax.fit1$AICc), 
-                        "AICc_weight" = model_weights(c(ns.prod.fit2$AICc,ns.smax.fit1$AICc),form='TMB')), 
+stable.lin.smax.fit=ricker_TMB(data=df.lin.smax,ac=T,silent=T)
+
+knitr::kable(data.frame("model" = c("sim-smax/est-stable","sim-smax/est-prod", "sim-smax/est-smax"), 
+                        "AICc" = c(stable.lin.smax.fit$AICc,ns.lin.smax.prod.fit$AICc, ns.lin.smax.fit$AICc), 
+                        "AICc_weight" = model_weights(c(stable.lin.smax.fit$AICc,ns.lin.smax.prod.fit$AICc,ns.lin.smax.fit$AICc),form='TMB')), 
            digits = 2)
 ```
 
@@ -517,9 +547,9 @@ $$
 
 This transition matrix contains the estimated probabilities of either staying ($p_{1,1}$ and $p_{2,2}$) or shifting ($p_{1,2}$ and $p_{2,1}$) from one state to another for each time-step in a time-series, where $p_{1,2}$ is the probability of shifting from state 1 to state 2. In practice, this results in some inertia or latency that expects system dynamics to stay in a given regime for several years at a time before eventually transitioning to the other state - recreating the sort of regime shift dynamics we would expect to occur in a natural system.
 
-We can fit the HMM variant of the Ricker model using `samEst` functions `ricker_hmm_TMB()` and `ricker_hmm_stan()`.
+We can fit the HMM variant of the Ricker model using `samEst` functions `ricker_hmm_TMB` and `ricker_hmm_stan`.
 
-We can test these out by simulating known regime-like dynamics and fitting the models as the previous sections. You can adjust the number of potential regime states with `k_regime`. ***Typically***
+We can test these out by simulating known regime-like dynamics and fitting the models as the previous sections. You can adjust the number of potential regime states with `k_regime`. Typically we would declare 2 regimes (high and low estimate of a given parameter), which is the function default, and at most would suggest fitting 3 (high, medium, low) regimes.
 
 ```{r, prod regime hmm}
 #Ricker parameters
@@ -580,7 +610,7 @@ What you probably will find is that estimates from models do not perfectly repli
 
 For the regime shift models, we can also allow both productivity and capacity to differ between regimes - allowing for a lot of flexibility. This could emerge when conditions shift in such a way that both density-dependent and -independent survival are affected.
 
-The `samEst` plotting function `hmm_sr_plot()` will show the $k$ estimate spawner-recruit curves, with the observations being colourized based on their probability of emerging from each curve (or regime) - with estimates of probabilities through time as the adjacent plot.
+The `samEst` plotting function `hmm_sr_plot` will show the $k$ estimate spawner-recruit curves, with the observations being colourized based on their probability of emerging from each curve (or regime) - with estimates of probabilities through time as the adjacent plot.
 
 ```{r, prod-cap regime hmm,fig.height=8,fig.width=6}
 #Ricker parameters
