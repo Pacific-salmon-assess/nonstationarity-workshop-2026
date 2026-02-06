@@ -643,9 +643,9 @@ In this section, we will provide you with various real spawner-recruit time-seri
 
 If you have your own spawner-recruit dataset you want to explore with the different estimation procedures, then all you need is a data-frame with the following specified column headers: *S* (spawner abundance), *logRS* (log(recruits/spawner)), and *by* (brood cohort year).
 
-## Harrison Chinook
+## Fraser Chinook
 
-Spawner-recruit time-series for Harrison Lake Chinook (Fraser River, BC).
+Spawner-recruit time-series for Harrison Lake Chinook.
 
 ```{r, harr chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/harrison_chinook.csv')
@@ -657,6 +657,20 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 #ricker_rw_TMB(data=df,tv.par='a',silent=T)
 #ricker_hmm_TMB(data=df,tv.par='a',silent=T)
 ```
+
+Spawner-recruit time-series for Nicola River Chinook.
+
+```{r, harr chinook,fig.width=7,fig.height=9}
+df=read.csv('../datasets/nicola_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
 ## Fraser Pinks
 
 Spawner-recruit time-series for Fraser River Pink salmon.
@@ -674,10 +688,78 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 ## Fraser Coho
 
-Spawner-recruit time-series for Fraser River Pink salmon.
+Spawner-recruit time-series for Fraser Canyon Coho salmon.
 
-```{r, fraser pink}
-df=read.csv('../datasets/fraser_pinks.csv')
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/fraser_canyon_coho.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for Middle Fraser Coho salmon.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/mid_fraser_coho.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for South Thompson Coho salmon.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/south_thompson_coho.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for North Thompson Coho salmon.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/north_thompson_coho.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+## Skeena Chinook
+
+Spawner-recruit time-series for Kitsumkalum Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/kitsumkalum_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for Upper Skeena Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/upper_skeena_chinook.csv')
+df$logRS=log(df$R/df$S)
 
 f1=ricker_TMB(data=df,ac=T,silent=T)
 static_sr_plot(data=df,mod=f1,plot.params=TRUE)
