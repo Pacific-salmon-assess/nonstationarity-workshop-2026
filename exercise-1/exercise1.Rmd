@@ -641,8 +641,45 @@ lines(hmm.fit.b$Smax[hmm.fit.b$regime],lwd=2,col='darkred')
 
 In this section, we will provide you with various real spawner-recruit time-series so that you can explore their potential for non-stationarity using the tools from the previous sections.
 
-## Fraser Sockeye
+If you have your own spawner-recruit dataset you want to explore with the different estimation procedures, then all you need is a data-frame with the following specified column headers: *S* (spawner abundance), *logRS* (log(recruits/spawner)), and *by* (brood cohort year).
 
 ## Harrison Chinook
 
-## 
+Spawner-recruit time-series for Harrison Lake Chinook (Fraser River, BC).
+
+```{r, harr chinook}
+df=read.csv('../datasets/harrison_chinook.csv')
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+## Fraser Pinks
+
+Spawner-recruit time-series for Fraser River Pink salmon.
+
+```{r, fraser pink}
+df=read.csv('../datasets/fraser_pinks.csv')
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+## Fraser Coho
+
+Spawner-recruit time-series for Fraser River Pink salmon.
+
+```{r, fraser pink}
+df=read.csv('../datasets/fraser_pinks.csv')
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
