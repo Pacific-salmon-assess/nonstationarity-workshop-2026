@@ -671,6 +671,117 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 #ricker_hmm_TMB(data=df,tv.par='a',silent=T)
 ```
 
+## Skeena Chinook
+
+Spawner-recruit time-series for Kitsumkalum Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/kitsumkalum_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for Upper Skeena Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/upper_skeena_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+## Yukon Chinook
+
+Spawner-recruit time-series for Middle Yukon Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/middle_yukon_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for Upper Yukon Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/upper_yukon_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for Nordenskiold Chinook.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/nordenskiold_chinook.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+## Fraser Sockeye
+
+Spawner-recruit time-series for Chilko Lake Sockeye.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/chilko_sockeye.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+
+Spawner-recruit time-series for Cultus Lake Sockeye.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/cultus_sockeye.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
+Spawner-recruit time-series for Quesnel Lake Sockeye.
+
+```{r, fraser pink,fig.width=7,fig.height=9}
+df=read.csv('../datasets/quesnel_sockeye.csv')
+df$logRS=log(df$R/df$S)
+
+f1=ricker_TMB(data=df,ac=T,silent=T)
+static_sr_plot(data=df,mod=f1,plot.params=TRUE)
+
+#ricker_rw_TMB(data=df,tv.par='a',silent=T)
+#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
+```
+
 ## Fraser Pinks
 
 Spawner-recruit time-series for Fraser River Pink salmon.
@@ -740,30 +851,4 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 #ricker_hmm_TMB(data=df,tv.par='a',silent=T)
 ```
 
-## Skeena Chinook
 
-Spawner-recruit time-series for Kitsumkalum Chinook.
-
-```{r, fraser pink,fig.width=7,fig.height=9}
-df=read.csv('../datasets/kitsumkalum_chinook.csv')
-df$logRS=log(df$R/df$S)
-
-f1=ricker_TMB(data=df,ac=T,silent=T)
-static_sr_plot(data=df,mod=f1,plot.params=TRUE)
-
-#ricker_rw_TMB(data=df,tv.par='a',silent=T)
-#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
-```
-
-Spawner-recruit time-series for Upper Skeena Chinook.
-
-```{r, fraser pink,fig.width=7,fig.height=9}
-df=read.csv('../datasets/upper_skeena_chinook.csv')
-df$logRS=log(df$R/df$S)
-
-f1=ricker_TMB(data=df,ac=T,silent=T)
-static_sr_plot(data=df,mod=f1,plot.params=TRUE)
-
-#ricker_rw_TMB(data=df,tv.par='a',silent=T)
-#ricker_hmm_TMB(data=df,tv.par='a',silent=T)
-```
