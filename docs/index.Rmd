@@ -1,5 +1,5 @@
 ---
-title: 'Exercise 1: Assessing nonstationarity in spawner-recruit dynamics'
+title: 'Nonstationary spawner-recruitment dynamics for Pacific salmon'
 output:
   html_document:
     df_print: paged
