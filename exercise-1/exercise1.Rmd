@@ -647,7 +647,7 @@ If you have your own spawner-recruit dataset you want to explore with the differ
 
 Spawner-recruit time-series for Harrison Lake Chinook (Fraser River, BC).
 
-```{r, harr chinook}
+```{r, harr chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/harrison_chinook.csv')
 
 f1=ricker_TMB(data=df,ac=T,silent=T)
@@ -660,7 +660,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Fraser River Pink salmon.
 
-```{r, fraser pink}
+```{r, fraser pink,fig.width=7,fig.height=9}
 df=read.csv('../datasets/fraser_pinks.csv')
 
 f1=ricker_TMB(data=df,ac=T,silent=T)
