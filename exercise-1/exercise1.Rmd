@@ -660,7 +660,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Nicola River Chinook.
 
-```{r, harr chinook,fig.width=7,fig.height=9}
+```{r, nicola chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/nicola_chinook.csv')
 df$logRS=log(df$R/df$S)
 
@@ -675,7 +675,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Kitsumkalum Chinook.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, kitsumkalum chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/kitsumkalum_chinook.csv')
 df$logRS=log(df$R/df$S)
 
@@ -688,7 +688,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Upper Skeena Chinook.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, upp skeena chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/upper_skeena_chinook.csv')
 df$logRS=log(df$R/df$S)
 
@@ -703,7 +703,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Middle Yukon Chinook.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, mid yk chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/middle_yukon_chinook.csv')
 df$logRS=log(df$R/df$S)
 
@@ -714,10 +714,10 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 #ricker_hmm_TMB(data=df,tv.par='a',silent=T)
 ```
 
-Spawner-recruit time-series for Upper Yukon Chinook.
+Spawner-recruit time-series for Northern Yukon Chinook.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
-df=read.csv('../datasets/upper_yukon_chinook.csv')
+```{r, upper yk chinook,fig.width=7,fig.height=9}
+df=read.csv('../datasets/northern_yukon_chinook.csv')
 df$logRS=log(df$R/df$S)
 
 f1=ricker_TMB(data=df,ac=T,silent=T)
@@ -729,7 +729,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Nordenskiold Chinook.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, nord chinook,fig.width=7,fig.height=9}
 df=read.csv('../datasets/nordenskiold_chinook.csv')
 df$logRS=log(df$R/df$S)
 
@@ -744,7 +744,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Chilko Lake Sockeye.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, chilko soc,fig.width=7,fig.height=9}
 df=read.csv('../datasets/chilko_sockeye.csv')
 df$logRS=log(df$R/df$S)
 
@@ -758,7 +758,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Cultus Lake Sockeye.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, cultus soc,fig.width=7,fig.height=9}
 df=read.csv('../datasets/cultus_sockeye.csv')
 df$logRS=log(df$R/df$S)
 
@@ -771,7 +771,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Quesnel Lake Sockeye.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, quesnel soc,fig.width=7,fig.height=9}
 df=read.csv('../datasets/quesnel_sockeye.csv')
 df$logRS=log(df$R/df$S)
 
@@ -801,7 +801,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Fraser Canyon Coho salmon.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, fraser canyon coho,fig.width=7,fig.height=9}
 df=read.csv('../datasets/fraser_canyon_coho.csv')
 df$logRS=log(df$R/df$S)
 
@@ -814,7 +814,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for Middle Fraser Coho salmon.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, mid fraser coho,fig.width=7,fig.height=9}
 df=read.csv('../datasets/mid_fraser_coho.csv')
 df$logRS=log(df$R/df$S)
 
@@ -827,7 +827,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for South Thompson Coho salmon.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, s thompson coho,fig.width=7,fig.height=9}
 df=read.csv('../datasets/south_thompson_coho.csv')
 df$logRS=log(df$R/df$S)
 
@@ -840,7 +840,7 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 
 Spawner-recruit time-series for North Thompson Coho salmon.
 
-```{r, fraser pink,fig.width=7,fig.height=9}
+```{r, n thompson coho,fig.width=7,fig.height=9}
 df=read.csv('../datasets/north_thompson_coho.csv')
 df$logRS=log(df$R/df$S)
 
