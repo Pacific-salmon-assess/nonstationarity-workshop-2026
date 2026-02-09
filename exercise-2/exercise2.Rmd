@@ -15,6 +15,7 @@ The following exercises are intended to give participants a broad understanding 
 ```{r, simulation functions,echo=FALSE}
 source('../functions/sim_functions.R')
 source('../functions/plot_functions.R')
+knitr::opts_chunk$set(fig.align = 'center')
 ```
 
 # Non-stationary reference points

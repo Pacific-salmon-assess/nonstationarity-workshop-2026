@@ -42,11 +42,12 @@ The simulation is governed by our familiar Ricker parameters ($log(\alpha)$, $S_
 
 ```{r, simulation functions,echo=FALSE}
 source('../functions/sim_functions.R')
+knitr::opts_chunk$set(fig.align = 'center')
 ```
 
 ```{r, static ricker simulation,fig.width=6,fig.height=8}
 #Ricker parameters
-log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative expect R/S)
+log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative R/S)
 smax=5000 #this parameter can vary massively, from hundreds to millions
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50 #time series length
