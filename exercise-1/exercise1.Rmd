@@ -91,7 +91,7 @@ st.fit1=ricker_TMB(data=df.st,silent=T)#note silent = T just suppresses the upda
 
 How do the estimates compare to the true values in the simulation?
 
-real (i.e. declared above) vs. estimated $log(\alpha)$:
+real (i.e., declared above) vs. estimated $log(\alpha)$:
 
 ```{r, static estimates loga}
 #We can view the MLE estimates of the key parameters by calling them up from the function
@@ -150,7 +150,7 @@ c(true.umsy, st.fit1$Umsy)
 
 ### Priors  
 
-Note that the default of `ricker_TMB` applies priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The default $S_{max}$ prior is fairly informative, which we set as a normal distribution, with the mean as half the maximum observed spawner abundance and a standard deviation of double of that same quantity. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
+Note that `ricker_TMB` applies default priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The default $S_{max}$ prior is fairly informative, which we set as a normal distribution, with the mean as half the maximum observed spawner abundance and a standard deviation of double of that same quantity. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
 
 In some cases, you may have strong priors derived from external information - e.g. watershed area, or some other estimate. You can set custom priors directly in this function (and others). Here we can see how that works and changes the previous estimate - prior function plotted in blue:
 
@@ -180,9 +180,9 @@ $$\epsilon_t = \rho \cdot \epsilon_{t-1}  + \sqrt{1-\rho^{2\Delta t}}\cdot \delt
 
 $$\delta_t \sim N(0, \sigma)$$
 
-The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
+The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation (i.e. AR1) term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
 
-We will add this to our simulated stable dynamics to see how it changes the spawner-recruit curve and parameter estimates.
+We will add this to our simulated stable dynamics by adding arguments for `rho` and `form='autocorr'` to see how it changes the spawner-recruit curve and parameter estimates.
 
 ```{r, autocorrelated stable dynamics}
 #Ricker parameters
