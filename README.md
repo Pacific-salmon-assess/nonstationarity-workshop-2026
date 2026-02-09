@@ -16,6 +16,7 @@ remotes::install_git('https://github.com/Pacific-salmon-assess/samEst')
 
 Note, that due to the size of the TMB models, that installation may take some time (upwards of 15-20 mins) to complete. If there are issues with installation prior to the workshop, feel free to contact Dan (dan.greenberg[at]dfo-mpo.gc.ca). Note also that the package and dependencies were built on R v4.3 - 4.5 - older R versions may cause issues (see [here](https://muug.ca/mirror/cran/) to download; or use the [installr](https://talgalili.github.io/installr/) R package to easily update your older versions). It is also recommended to use [Rstudio](https://posit.co/download/rstudio-desktop/), for visualizing the markdown files in HTML using in situ viewer panel. 
 
+
 Note: that a full HTML page for both exercises can be viewed [here](https://pacific-salmon-assess.github.io/nonstationarity-workshop-2026/) if this is preferred for reading through the text (or you are having technical difficulties), but you will get the most out of ther material by manipulating the input parameters to explore each section and outcome in R.
 
 Most exercises will default to TMB implementation, if you want to also run Bayesian models with [*Stan*](https://mc-stan.org/) (via [*rstan*](https://mc-stan.org/rstan/)), you will need to download [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your particular operating system - of a version appropriate to your current R version (e.g. 4.5 for R 4.5.x) - follow the instructions for installation in the link.
