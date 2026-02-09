@@ -340,7 +340,7 @@ $$\omega_{t} \sim N(0, \sigma_{\omega})$$
 
 $$\epsilon_t \sim N(0, \sigma)$$
 
-In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of papers - so this particular formulation has now been dubbed 'Peterman's productivity method'.
+In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of (papers)[https://cdnsciencepub.com/doi/pdf/10.1139/f99-204?casa_token=XzJcySYnG6gAAAAA:d988GKOksygSWAAX6CvtsrY3pOSJ_7TrgIVxbwRpfm9XC4YMH6ExHXLWh_-TOGYphLRm69T_mi4yqb4] - so this particular formulation has now been dubbed 'Peterman's productivity method'.
 
 
 An alternative form of this would allow the capacity parameter ($S_{max}$) to instead vary through time:
