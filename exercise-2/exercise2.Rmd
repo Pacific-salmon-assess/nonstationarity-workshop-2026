@@ -36,13 +36,13 @@ The key harvest-based biological reference point is the maximum sustainable harv
 
 $$U_{msy} = 1 - LambertW(e^{1-log(\alpha)})$$
 
-Which can be thought of as the harvest (or exploitation) rate that equivalently produce maximum sustainable yield over the long-term.
+Which can be thought of as the harvest (or exploitation) rate that equivalently produces maximum sustainable yield over the long-term.
 
 First, it may be helpful to visualize how these reference points change with respect to the Ricker parameters generally:
 
 ```{r, smsy and umsy - changing Ricker pars}
 library(samEst)
-log.a=seq(0.1,2,by=0.1) #initial productivity
+log.a=seq(0.1,2,by=0.1)
 smax0=5000
 log.a0=1
 smax=seq(500,500000)
@@ -52,9 +52,9 @@ umsy=umsyCalc(log.a)
 
 par(mfrow=c(2,2))
 plot(smsy.a~log.a,type='l',lwd=2,bty='l',ylab ='Smsy')
-plot(smsy.b~smax,type='l',lwd=2,bty='l',ylab ='Smsy')
-plot(umsy~log.a,type='l',lwd=2,bty='l',ylim=c(0,1))
-plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='Umsy',ylim=c(0,1))
+plot(smsy.b~smax,type='l',lwd=2,bty='l',ylab ='Smsy', xlab ='Smax')
+plot(umsy~log.a,type='l',lwd=2,bty='l',ylim=c(0,1),ylab='Umsy')
+plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='Umsy', xlab='Smax',ylim=c(0,1))
 ```
 Not that when $S_{max}$ varies, but not $log(\alpha)$, that $U_{msy}$ will not change (as per the formula above).
 
@@ -88,17 +88,6 @@ lines(ns.prod.fit1$Smsy,lwd=2,col='darkred')
 As productivity ($log(\alpha)$) declines so too does $S_{msy}$ and $U_{msy}$ (although not linearly, due to their log-scaling), and similarly as $S_{max}$ declines so too does $S_{msy}$ (but not $U_{msy}$, which is only based on ($log(\alpha)$)).
 
 # Stable and non-stationary harvest control rules
-
-<<<<<<< HEAD
-Imagine then how harvest in a salmon fishery may be set based on these reference points. There are a diversity of different 'harvest control rules' that are set for various salmon fisheries throughout the Northeast Paicfic - one commonality is that there is typically a target for exploitation rates based on the returning run size in a given year, as well as a lower limit around which harvest is curtailed to ensure enough fish return to spawn in their natal watersheds to maintain recruitment of future generations (i.e. an escapement goal). Typically, these two quantities - the target rate and escapement goal - will typically be related to estimates of stock-specific reference points: $U_{msy}$ and $S_{msy}$, respectively.
-
-If we then think about how non-stationary versions of these reference points can be translated into a harvest control rule - the result is that these reference points then become 'moving targets' based on estimates from the statistical information in the time-series.
-
-We can visualize a harvest control rule that is fairly common - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental or recreational or First Nations catch), with a harvest target beyond that limit that ramps up toward some fraction of $U_{msy}$ based on the run size - here plotted for 3 different $log(\alpha)$ estimates that may represent change at various time-points (e.g. in this case a decline in productivity).
-
-Key parameters include our standard Ricker spawner-recruit parameters, that influence the reference points that feed into the harvest control rule.
-
-Additionaly, we have tweaks to the exact details of how the harvest control rule relates to the reference points: `U.min` the minimum harvest rate (below the escapement goal), `eg.scalar` - the escapement goal as a fraction of $S_{msy}$ (e.g. 1 = $S_{msy}$), `upper.tar.scalar` - the upper run size where the maximum harvest rate is achieved as a fraction of $S_{msy}$, and `U.scalar` - the maximum harvest rate as a fraction of $U_{msy}$ (e.g. 1 = $U_{msy}$).
 
 Imagine then how harvest in a salmon fishery may be set based on these reference points. There are a diversity of different 'harvest control rules' that are set for various salmon fisheries throughout the North Pacific - one commonality is that there is typically a target for exploitation rates based on the returning run size in a given year, as well as a lower limit around which harvest is curtailed to ensure enough fish return to spawn in their natal watersheds to maintain recruitment of future generations (i.e. an escapement goal). Typically, these two quantities - the target rate and escapement goal - will be influenced by estimates of stock-specific reference points: $U_{msy}$ and $S_{msy}$, respectively.
 
