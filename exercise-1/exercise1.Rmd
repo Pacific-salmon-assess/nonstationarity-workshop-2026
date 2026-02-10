@@ -340,7 +340,7 @@ $$\omega_{t} \sim N(0, \sigma_{\omega})$$
 
 $$\epsilon_t \sim N(0, \sigma)$$
 
-In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of [papers](https://cdnsciencepub.com/doi/pdf/10.1139/f99-204?casa_token=XzJcySYnG6gAAAAA:d988GKOksygSWAAX6CvtsrY3pOSJ_7TrgIVxbwRpfm9XC4YMH6ExHXLWh_-TOGYphLRm69T_mi4yqb4) - so this particular formulation has now been dubbed 'Peterman's productivity method'.
+In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of $\sigma_{\omega}$; we can call this process deviance or variance. This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of [papers](https://cdnsciencepub.com/doi/pdf/10.1139/f99-204?casa_token=XzJcySYnG6gAAAAA:d988GKOksygSWAAX6CvtsrY3pOSJ_7TrgIVxbwRpfm9XC4YMH6ExHXLWh_-TOGYphLRm69T_mi4yqb4) - so this particular formulation has now been dubbed 'Peterman's productivity method'.
 
 
 An alternative form of this would allow the capacity parameter ($S_{max}$) to instead vary through time:
@@ -449,8 +449,8 @@ The previous examples are illustrative of a very basic hypothesis for system cha
 ```{r, tv sim - random walk prod}
 #Ricker parameters
 log.a0=1.5 #initial productivity
-p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
-smax0=5000 #initial smax
+p.change=-0.75 #proportional change in time-varying parameter, -0.75 = -75% (on the log-scale)
+smax0=5000 #initial Smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
@@ -468,7 +468,7 @@ Now we will try the random walk change on capacity:
 ```{r, tv sim - random walk smax}
 #Ricker parameters
 log.a0=1.5 #initial productivity
-p.change=-0.5#proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
+p.change=-0.5#proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale)
 smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
@@ -532,7 +532,7 @@ Were you able to correctly identify the true parameter changes based on the mode
 
 ## Regime shifts
 
-In some cases, the form of nonstationarity may be much more abrupt than what we've previously simulated and modeled- and this may especially be true for Pacific salmon where oceanographic climate appears to have a large influence on population dynamics and can rapidly shift between phases over periods of time.
+In some cases, the form of nonstationarity may be much more abrupt than what we've previously simulated and modeled - and this may especially be true for Pacific salmon where oceanographic climate appears to have a large influence on population dynamics and can rapidly shift between phases over periods of time.
 
 Another nonstationary model form tries to capture these 'regime shift' dynamics using a hidden Markov model (HMM) framework. The HMM is a tool to measure 'hidden states' that governs a system's dynamics. In our case we may expect that there are potentially 2 (or more) regimes that dictate salmon population dynamics: a low productivity and high productivity state. Since we do not necessarily know which state we are in at a given time point we model the probability of being in any given state over time.
 
@@ -641,7 +641,7 @@ lines(hmm.fit.b$Smax[hmm.fit.b$regime],lwd=2,col='darkred')
 
 In this section, we will provide you with various real spawner-recruit time-series so that you can explore their potential for non-stationarity using the tools from the previous sections.
 
-If you have your own spawner-recruit dataset you want to explore with the different estimation procedures, then all you need is a data-frame with the following specified column headers: *S* (spawner abundance), *logRS* (log(recruits/spawner)), and *by* (brood cohort year).
+If you have your own spawner-recruit dataset you want to explore with the different estimation procedures, then all you need is a data-frame with the following specified column headers: `S` (spawner abundance), `logRS` (log(recruits/spawner)), and `by` (brood cohort year).
 
 ## Fraser Chinook
 
