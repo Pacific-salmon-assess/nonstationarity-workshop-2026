@@ -180,7 +180,7 @@ $$\epsilon_t = \rho \cdot \epsilon_{t-1}  + \sqrt{1-\rho^{2\Delta t}}\cdot \delt
 
 $$\delta_t \sim N(0, \sigma)$$
 
-The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation (i.e. AR1) term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
+The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation (i.e. AR1) term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious). The modifier on $\delta_t$ ($\sqrt{1-\rho^{2\Delta t}}$) accounts for time gaps between observations (i.e. a 2-year time gap, or \Delta t=2, shrinks the expected contribution of $\rho$ due to the decay of the 1-year autocorrelation).
 
 We will add this to our simulated stable dynamics by adding arguments for `rho` and `form='autocorr'` to see how it changes the spawner-recruit curve and parameter estimates.
 
@@ -237,7 +237,7 @@ points(df.st$eps,pch=21,bg=viridis::viridis(length(df.st$S)))
 
 What do you notice about the temporal patterns in the residuals?
 
-Let's see how this effects parameter estimates. To account for autocorrelation in our estimation models, we set the `ac` option in `ricker_TMB()` or `ricker_stan()` to `TRUE`.
+Let's see how 1-year autocorrelation affects parameter estimates. To account for autocorrelation in our estimation models, we set the `ac` option in `ricker_TMB()` or `ricker_stan()` to `TRUE`.
 
 First let's see how it performs on the autocorrelated dataset.
 
@@ -485,7 +485,7 @@ lines(ns.smax.fit3$Smax,lwd=2,col='darkred')
 
 ```
 
-In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). Let's apply our estimates to the alternate simulation to see what it estimates (note - the simulation datasets are switched to be mismatched):
+In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). We can fit models that are mismatched to their simulation properties (e.g. fit a non-stationary productivity to a scenario where $S_{max}$ is changing) to see what the mis-specified models estimate:
 
 ```{r, tv est - linear crossed,fig.width=7,fig.height=9}
 ns.lin.smax.prod.fit=ricker_rw_TMB(data=df.lin.smax,tv.par='a',silent=T)
