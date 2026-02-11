@@ -45,7 +45,7 @@ source('../functions/sim_functions.R')
 knitr::opts_chunk$set(fig.align = 'center')
 ```
 
-```{r, static ricker simulation,fig.width=6,fig.height=8}
+```{r, static ricker simulation,fig.width=7,fig.height=9}
 #Ricker parameters
 log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative R/S)
 smax=5000 #this parameter can vary massively, from hundreds to millions
@@ -265,12 +265,12 @@ What if we don't account for autocorrelation, what parameters will we get?
 ac.fit.st=ricker_TMB(data=df.ac,ac=FALSE,silent=T)
 
 knitr::kable(data.frame("parameter" = c("rho", "Smax", "log_a", "Smsy", "Umsy"), 
-                        "true" = c(rho, smax, log.a, smsyCalc(log.a,1/smax), umsyCalc(log.a))), 
-             "estimate" = c(ac.fit.st$rho, ac.fit.st$Smax, ac.fit.st$logalpha, 
-                            ac.fit.st$Smsy, ac.fit.st$Umsy), 
+                        "true" = c(rho, smax, log.a, smsyCalc(log.a,1/smax), umsyCalc(log.a)), 
+                        "estimate-autcorr" = c(ac.fit.ac$rho, ac.fit.ac$Smax, ac.fit.ac$logalpha, 
+                                       ac.fit.ac$Smsy, ac.fit.ac$Umsy),
+             "estimate-static" = c(ac.fit.st$rho, ac.fit.st$Smax, ac.fit.st$logalpha, 
+                            ac.fit.st$Smsy, ac.fit.st$Umsy)), 
            digits = 2)
-
-static_sr_plot(data=df.ac,mod=ac.fit.st,plot.params=TRUE) 
 ```
 
 What differences do you find in the Ricker parameter estimates and residual plots for when you account for (or not) autocorrelation in the model?
@@ -324,6 +324,8 @@ knitr::kable(data.frame("model" = c("stable-sim/autocorrelated-est", "stable-sim
            digits = 2)
 
 ```
+
+Typically, the autocorrelated model is what we would consider a 'baseline' model for a stable system. It's pretty common that there is some degree of autocorrelation (typically a positive value for $\rho$) in year-to-year recruitment (with the exception of Pink). The autocorrelation parameter is also often indicative as a statistical signal of long-term change in system dynamics, which is what we will explore in the next sections.
 
 
 ## Continuous change
@@ -403,7 +405,7 @@ plot(df.lin.smax$smax.t,type='l',lwd=2,ylab='Smax parameter',xlab='simulation ye
 lines(ns.lin.smax.fit$Smax,lwd=2,col='darkred') #predicted
 ```
 
-```{r, rw plot smax,fig.width=6,fig.height=8}
+```{r, rw plot smax,fig.width=7,fig.height=9}
 rw_sr_plot(data=df.lin.smax,mod=ns.lin.smax.fit)
 ```
 
@@ -485,7 +487,7 @@ lines(ns.smax.fit3$Smax,lwd=2,col='darkred')
 
 In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). Let's apply our estimates to the alternate simulation to see what it estimates (note - the simulation datasets are switched to be mismatched):
 
-```{r, tv est - linear crossed,fig.width=6,fig.height=8}
+```{r, tv est - linear crossed,fig.width=7,fig.height=9}
 ns.lin.smax.prod.fit=ricker_rw_TMB(data=df.lin.smax,tv.par='a',silent=T)
 
 ns.lin.prod.smax.fit=ricker_rw_TMB(data=df.lin.prod,tv.par='b',silent=T)

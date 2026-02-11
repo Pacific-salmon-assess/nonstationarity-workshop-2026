@@ -13,7 +13,7 @@ editor_options:
 
 # Overview - Section 1: Estimation
 
-The following exercises are intended to give participants a broad understanding of the statistical nuances of estimating nonstationarity in spawner-recruit time-series, with practical applications using the [samEst package](https://github.com/Pacific-salmon-assess/samEst). You may choose to 'knit' this document ('[exercise1.Rmd](https://github.com/Pacific-salmon-assess/nonstationarity-workshop-2026/blob/main/exercise-1/exercise1.Rmd)') to an HTML file, for visualization - or simply read through the text here. We encourage you to modify the R code chunks to experiment with each section to explore the mechanics of the simulations and model testing.
+The following exercises are intended to give participants a broad understanding of the statistical nuances of estimating nonstationarity in spawner-recruit time-series, with practical applications using the [samEst package](https://github.com/Pacific-salmon-assess/samEst). We encourage you to modify the R code chunks to experiment with each section to explore the mechanics of the simulations and model testing.
 
 # Forms of non-stationarity, and their alternatives
 
@@ -43,11 +43,12 @@ The simulation is governed by our familiar Ricker parameters ($log(\alpha)$, $S_
 ```{r, simulation functions,echo=FALSE}
 source('../functions/sim_functions.R')
 source('../functions/plot_functions.R')
+knitr::opts_chunk$set(fig.align = 'center')
 ```
 
-```{r, static ricker simulation,fig.width=6,fig.height=8}
+```{r, static ricker simulation,fig.width=7,fig.height=9}
 #Ricker parameters
-log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative expect R/S)
+log.a=1.5 #note - this parameter tends to vary from... ~0.2 to ~ 3 in real populations (use exp(x) to translate this to raw max. recruits/spawner); note at log(0) = 1, this implies essentially an extinction vortex (as all values of S_t > 0 will lead to negative R/S)
 smax=5000 #this parameter can vary massively, from hundreds to millions
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50 #time series length
@@ -91,7 +92,7 @@ st.fit1=ricker_TMB(data=df.st,silent=T)#note silent = T just suppresses the upda
 
 How do the estimates compare to the true values in the simulation?
 
-real (i.e. declared above) vs. estimated $log(\alpha)$:
+real (i.e., declared above) vs. estimated $log(\alpha)$:
 
 ```{r, static estimates loga}
 #We can view the MLE estimates of the key parameters by calling them up from the function
@@ -102,12 +103,18 @@ real vs. estimated $S_{max}$:
 ```{r, static estimates smax}
 c(smax, st.fit1$Smax)
 ```
-
 real vs. estimated $\sigma$:
 
 ```{r, static estimates sigma}
 c(sigma, st.fit1$sigma)
 ```
+
+Note that if you are curious about uncertainty in the parameter estimates these can be examined in the output by calling `sd_report`.
+
+```{r, sd report}
+st.fit1$sd_report
+```
+For *Stan* versions you can extract the full posteriors for any parameter by calling `full_posterior`.
 
 Let's visualize the prediction (red) compared to true (black):
 
@@ -150,7 +157,7 @@ c(true.umsy, st.fit1$Umsy)
 
 ### Priors  
 
-Note that the default of `ricker_TMB` applies priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The default $S_{max}$ prior is fairly informative, which we set as a normal distribution, with the mean as half the maximum observed spawner abundance and a standard deviation of double of that same quantity. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
+Note that `ricker_TMB` applies default priors on the parameters, as we generally encourage this to restrict the parameter space to areas that are biologically relevant. The default $S_{max}$ prior is fairly informative, which we set as a normal distribution, with the mean as half the maximum observed spawner abundance and a standard deviation of double of that same quantity. This is to prevent estimates of capacity that are widely beyond what's ever been observed (e.g. >10x the highest observed spawner estimate) and is based on an empirical ratio without any priors applied.
 
 In some cases, you may have strong priors derived from external information - e.g. watershed area, or some other estimate. You can set custom priors directly in this function (and others). Here we can see how that works and changes the previous estimate - prior function plotted in blue:
 
@@ -180,9 +187,9 @@ $$\epsilon_t = \rho \cdot \epsilon_{t-1}  + \sqrt{1-\rho^{2\Delta t}}\cdot \delt
 
 $$\delta_t \sim N(0, \sigma)$$
 
-The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
+The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation (i.e. AR1) term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
 
-We will add this to our simulated stable dynamics to see how it changes the spawner-recruit curve and parameter estimates.
+We will add this to our simulated stable dynamics by adding arguments for `rho` and `form='autocorr'` to see how it changes the spawner-recruit curve and parameter estimates.
 
 ```{r, autocorrelated stable dynamics}
 #Ricker parameters
@@ -341,7 +348,7 @@ $$\omega_{t} \sim N(0, \sigma_{\omega})$$
 
 $$\epsilon_t \sim N(0, \sigma)$$
 
-In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of papers - so this particular formulation has now been dubbed 'Peterman's productivity method'.
+In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of (papers)[https://cdnsciencepub.com/doi/pdf/10.1139/f99-204?casa_token=XzJcySYnG6gAAAAA:d988GKOksygSWAAX6CvtsrY3pOSJ_7TrgIVxbwRpfm9XC4YMH6ExHXLWh_-TOGYphLRm69T_mi4yqb4] - so this particular formulation has now been dubbed 'Peterman's productivity method'.
 
 
 An alternative form of this would allow the capacity parameter ($S_{max}$) to instead vary through time:
@@ -404,7 +411,7 @@ plot(df.lin.smax$smax.t,type='l',lwd=2,ylab='Smax parameter',xlab='simulation ye
 lines(ns.lin.smax.fit$Smax,lwd=2,col='darkred') #predicted
 ```
 
-```{r, rw plot smax,fig.width=6,fig.height=8}
+```{r, rw plot smax,fig.width=7,fig.height=9}
 rw_sr_plot(data=df.lin.smax,mod=ns.lin.smax.fit)
 ```
 
@@ -486,7 +493,7 @@ lines(ns.smax.fit3$Smax,lwd=2,col='darkred')
 
 In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). Let's apply our estimates to the alternate simulation to see what it estimates (note - the simulation datasets are switched to be mismatched):
 
-```{r, tv est - linear crossed,fig.width=6,fig.height=8}
+```{r, tv est - linear crossed,fig.width=7,fig.height=9}
 ns.lin.smax.prod.fit=ricker_rw_TMB(data=df.lin.smax,tv.par='a',silent=T)
 
 ns.lin.prod.smax.fit=ricker_rw_TMB(data=df.lin.prod,tv.par='b',silent=T)
@@ -858,12 +865,6 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 The following exercises are intended to give participants a broad understanding of how stable and non-stationary spawner-recruit dynamics influence estimates of biological reference points - and the consequences of these different estimation approaches for stock assessment and management scenarios. We encourage you to modify the R code chunks to experiment with each section to explore the mechanics of the simulations and model testing.
 
 
-```{r, simulation functions,echo=FALSE}
-source('../functions/sim_functions.R')
-source('../functions/plot_functions.R')
-knitr::opts_chunk$set(fig.align = 'center')
-```
-
 # Non-stationary reference points
 
 As mentioned in the previous exercise, the parameters of the Ricker spawner-recruit model can be directly translated into useful management reference points for a stock based on its estimated population dynamics.
@@ -935,7 +936,6 @@ As productivity ($log(\alpha)$) declines so too does $S_{msy}$ and $U_{msy}$ (al
 
 # Stable and non-stationary harvest control rules
 
-<<<<<<< HEAD
 Imagine then how harvest in a salmon fishery may be set based on these reference points. There are a diversity of different 'harvest control rules' that are set for various salmon fisheries throughout the Northeast Paicfic - one commonality is that there is typically a target for exploitation rates based on the returning run size in a given year, as well as a lower limit around which harvest is curtailed to ensure enough fish return to spawn in their natal watersheds to maintain recruitment of future generations (i.e. an escapement goal). Typically, these two quantities - the target rate and escapement goal - will typically be related to estimates of stock-specific reference points: $U_{msy}$ and $S_{msy}$, respectively.
 
 If we then think about how non-stationary versions of these reference points can be translated into a harvest control rule - the result is that these reference points then become 'moving targets' based on estimates from the statistical information in the time-series.
