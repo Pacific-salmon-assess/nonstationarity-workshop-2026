@@ -77,7 +77,7 @@ We will use various `samEst` functions to estimate this model (and others) from 
 
 There are two forms for model fitting that we included in this package - one using *Template Model Builder* (*TMB*), which uses Laplace approximation of the marginal likelihood to estimate parameter values (i.e. maximum likelihood estimates, MLE), the other form is a Bayesian method using *Stan*. We won't get into great detail about all the nuances of the theory and practice of these two model forms, but the main point for their implementation in `samEst` is that the former will give fast point estimates and has an option for no priors on the parameters, while the latter will give full posterior distributions of parameter estimates - so it's easier to work with the full uncertainty of the parameters and also requires priors on each parameter.
 
-For the stationary form of the Ricker model, the two functions are: `ricker_TMB` and `ricker_stan`. You can call up either function (e.g. `??ricker_TMB`) to see the available arguments. For the rest of this exercise, we will use the *TMB* versions for speed and ease, you are welcome to switch these to *Stan* implementations, see the final section of advanced options for those interested.
+For the stationary form of the Ricker model, the two functions are: `ricker_TMB` and `ricker_stan`. You can call up either function (e.g. `??ricker_TMB`) to see the available arguments. For the rest of this exercise, we will use the *TMB* versions for speed and ease, you are welcome to switch these to *Stan* implementations. Note that to view *Stan* code for any model you can use `sr_mod(modelcode=TRUE)` with the various options for model forms that we will explore later in this document.
 
 Fit the *TMB* estimate of the Ricker curve with `samEst`. See [here](https://github.com/Pacific-salmon-assess/samEst?tab=readme-ov-file#install-instructions) for instructions to install `samEst`.  
 
@@ -103,18 +103,12 @@ real vs. estimated $S_{max}$:
 ```{r, static estimates smax}
 c(smax, st.fit1$Smax)
 ```
+
 real vs. estimated $\sigma$:
 
 ```{r, static estimates sigma}
 c(sigma, st.fit1$sigma)
 ```
-
-Note that if you are curious about uncertainty in the parameter estimates these can be examined in the output by calling `sd_report`.
-
-```{r, sd report}
-st.fit1$sd_report
-```
-For *Stan* versions you can extract the full posteriors for any parameter by calling `full_posterior`.
 
 Let's visualize the prediction (red) compared to true (black):
 
@@ -187,7 +181,7 @@ $$\epsilon_t = \rho \cdot \epsilon_{t-1}  + \sqrt{1-\rho^{2\Delta t}}\cdot \delt
 
 $$\delta_t \sim N(0, \sigma)$$
 
-The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation (i.e. AR1) term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious).
+The key difference here is that the annual recruitment deviance $\epsilon_t$ now includes both a random annual fluctuation ($\delta_t$) and a 1-year lagged autocorrelation (i.e. AR1) term ($\rho \cdot \epsilon_{t-1}$) where the level of autocorrelation ($\rho$, ranging from -1 to 1) dictates the 'memory' in system dynamics. Positive values of $\rho$ indicate that successive years of recruitment are more similar to each other, while negative values indicate that successive years are more dissimilar - which could emerge from strong inter-cohort competitive effects. In real spawner-recruit time-series, autocorrelation is almost always positive (see empirical estimates by species [here](https://pacific-salmon-assess.github.io/nonstationary_dynamics/#25_Rho_(autocorrelation))), so we will focus on this in our simulation (but feel free to change it to negative if you're curious). The modifier on $\delta_t$ ($\sqrt{1-\rho^{2\Delta t}}$) accounts for time gaps between observations (i.e. a 2-year time gap, or \Delta t=2, shrinks the expected contribution of $\rho$ due to the decay of the 1-year autocorrelation).
 
 We will add this to our simulated stable dynamics by adding arguments for `rho` and `form='autocorr'` to see how it changes the spawner-recruit curve and parameter estimates.
 
@@ -223,7 +217,7 @@ points(df.ac$eps,pch=21,bg=viridis::viridis(length(df.ac$S)))
 
 ```
 
-Lets's compare this to the same system with no autocorrelation (note if you changed the Ricker parameters in the previous section these will not be directly comparable, if not - re-run the previous section with equivalent Ricker parameters). Note 'eps' = $\epsilon_t$ = the residuals from the true parameters.
+Lets's compare this to the same system with no autocorrelation (note if you changed the Ricker parameters in the previous section these will not be directly comparable, if not - re-run the previous section with equivalent Ricker parameters). Note `eps` = $\epsilon_t$ = the residuals from the true parameters.
 
 ```{r, stable dynamics comp plot, fig.width=7,fig.height=9}
 par(mfrow=c(2,1))
@@ -244,7 +238,7 @@ points(df.st$eps,pch=21,bg=viridis::viridis(length(df.st$S)))
 
 What do you notice about the temporal patterns in the residuals?
 
-Let's see how this effects parameter estimates. To account for autocorrelation in our estimation models, we set the `ac` option in `ricker_TMB()` or `ricker_stan()` to `TRUE`.
+Let's see how 1-year autocorrelation affects parameter estimates. To account for autocorrelation in our estimation models, we set the `ac` option in `ricker_TMB()` or `ricker_stan()` to `TRUE`.
 
 First let's see how it performs on the autocorrelated dataset.
 
@@ -272,12 +266,12 @@ What if we don't account for autocorrelation, what parameters will we get?
 ac.fit.st=ricker_TMB(data=df.ac,ac=FALSE,silent=T)
 
 knitr::kable(data.frame("parameter" = c("rho", "Smax", "log_a", "Smsy", "Umsy"), 
-                        "true" = c(rho, smax, log.a, smsyCalc(log.a,1/smax), umsyCalc(log.a))), 
-             "estimate" = c(ac.fit.st$rho, ac.fit.st$Smax, ac.fit.st$logalpha, 
-                            ac.fit.st$Smsy, ac.fit.st$Umsy), 
+                        "true" = c(rho, smax, log.a, smsyCalc(log.a,1/smax), umsyCalc(log.a)), 
+                        "estimate-autcorr" = c(ac.fit.ac$rho, ac.fit.ac$Smax, ac.fit.ac$logalpha, 
+                                       ac.fit.ac$Smsy, ac.fit.ac$Umsy),
+             "estimate-static" = c(ac.fit.st$rho, ac.fit.st$Smax, ac.fit.st$logalpha, 
+                            ac.fit.st$Smsy, ac.fit.st$Umsy)), 
            digits = 2)
-
-static_sr_plot(data=df.ac,mod=ac.fit.st,plot.params=TRUE) 
 ```
 
 What differences do you find in the Ricker parameter estimates and residual plots for when you account for (or not) autocorrelation in the model?
@@ -332,7 +326,8 @@ knitr::kable(data.frame("model" = c("stable-sim/autocorrelated-est", "stable-sim
 
 ```
 
-***brief section summary paragraph here?***
+Typically, the autocorrelated model is what we would consider a 'baseline' model for a stable system. It's pretty common that there is some degree of autocorrelation (typically a positive value for $\rho$) in year-to-year recruitment (with the exception of Pink). The autocorrelation parameter is also often indicative as a statistical signal of long-term change in system dynamics, which is what we will explore in the next sections.
+
 
 ## Continuous change
 
@@ -348,7 +343,7 @@ $$\omega_{t} \sim N(0, \sigma_{\omega})$$
 
 $$\epsilon_t \sim N(0, \sigma)$$
 
-In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of ($\sigma_{\omega}$; we can call this process deviance or variance). This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of (papers)[https://cdnsciencepub.com/doi/pdf/10.1139/f99-204?casa_token=XzJcySYnG6gAAAAA:d988GKOksygSWAAX6CvtsrY3pOSJ_7TrgIVxbwRpfm9XC4YMH6ExHXLWh_-TOGYphLRm69T_mi4yqb4] - so this particular formulation has now been dubbed 'Peterman's productivity method'.
+In this formulation, nonstationary productivity changes for each brood cohort $t$ based on the last years estimate ($t-1$) adjusted with some process noise ($\omega_{t}$) that is drawn from a normal distribution with a standard deviation of $\sigma_{\omega}$; we can call this process deviance or variance. This portion of the model is equivalent to a 'random walk' or Brownian motion model, that is widely used across fields. Its application to spawner-recruit dynamics was pioneered by Dr. Randall Peterman in a series of [papers](https://cdnsciencepub.com/doi/pdf/10.1139/f99-204?casa_token=XzJcySYnG6gAAAAA:d988GKOksygSWAAX6CvtsrY3pOSJ_7TrgIVxbwRpfm9XC4YMH6ExHXLWh_-TOGYphLRm69T_mi4yqb4) - so this particular formulation has now been dubbed 'Peterman's productivity method'.
 
 
 An alternative form of this would allow the capacity parameter ($S_{max}$) to instead vary through time:
@@ -359,7 +354,7 @@ The key challenge in these models is that there are now two sources of variance 
 
 These nonstationary models can be fit in `samEst` using the `ricker_rw_TMB` or `ricker_rw_stan` functions. To choose between productivity or capacity changes, one must specify the time-varying parameter (`tv.par` as `a` or `b`); one can technically specify `both`, but we discourage this for reasons we will discuss.
 
-We will test how well these models can actually capture trend trends in these Ricker parameters using another simulation function made for this workshop - here we can change either intrinsic productivity or capacity to time-varying by specifying `tv.par = a` or `tv.par = b` in this function.
+We will test how well these models can actually capture trends in these Ricker parameters using another simulation function made for this workshop - here we can change either intrinsic productivity or capacity to time-varying by specifying `tv.par = a` or `tv.par = b` in this function.
 
 In this first simulation, we will develop spawner-recruit dynamics under a linear change in $\alpha$ and see if we can successfully estimate these changes with the non-stationary (random walk) version of the Ricker model. Here in productivity:
 
@@ -457,8 +452,8 @@ The previous examples are illustrative of a very basic hypothesis for system cha
 ```{r, tv sim - random walk prod}
 #Ricker parameters
 log.a0=1.5 #initial productivity
-p.change=-0.75 #proprtional change in time-varying parameter, -0.75 = -75% (on the log-scale), 0.5 = +50%
-smax0=5000 #initial smax
+p.change=-0.75 #proportional change in time-varying parameter, -0.75 = -75% (on the log-scale)
+smax0=5000 #initial Smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
 
@@ -476,7 +471,7 @@ Now we will try the random walk change on capacity:
 ```{r, tv sim - random walk smax}
 #Ricker parameters
 log.a0=1.5 #initial productivity
-p.change=-0.5#proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale), 0.5 = +50%
+p.change=-0.5#proprtional change in time-varying parameter, -0.5 = -50% (on the log-scale)
 smax0=5000 #initial smax
 sigma=0.6 #most stocks range from ~0.3 to 1.5
 N=50
@@ -491,7 +486,7 @@ lines(ns.smax.fit3$Smax,lwd=2,col='darkred')
 
 ```
 
-In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). Let's apply our estimates to the alternate simulation to see what it estimates (note - the simulation datasets are switched to be mismatched):
+In real time-series of salmon spawner-recruit dynamics, we won't know which parameter is actually nonstationary (if any). We can fit models that are mismatched to their simulation properties (e.g. fit a non-stationary productivity to a scenario where $S_{max}$ is changing) to see what the mis-specified models estimate:
 
 ```{r, tv est - linear crossed,fig.width=7,fig.height=9}
 ns.lin.smax.prod.fit=ricker_rw_TMB(data=df.lin.smax,tv.par='a',silent=T)
@@ -540,7 +535,7 @@ Were you able to correctly identify the true parameter changes based on the mode
 
 ## Regime shifts
 
-In some cases, the form of nonstationarity may be much more abrupt than what we've previously simulated and modeled- and this may especially be true for Pacific salmon where oceanographic climate appears to have a large influence on population dynamics and can rapidly shift between phases over periods of time.
+In some cases, the form of nonstationarity may be much more abrupt than what we've previously simulated and modeled - and this may especially be true for Pacific salmon where oceanographic climate appears to have a large influence on population dynamics and can rapidly shift between phases over periods of time.
 
 Another nonstationary model form tries to capture these 'regime shift' dynamics using a hidden Markov model (HMM) framework. The HMM is a tool to measure 'hidden states' that governs a system's dynamics. In our case we may expect that there are potentially 2 (or more) regimes that dictate salmon population dynamics: a low productivity and high productivity state. Since we do not necessarily know which state we are in at a given time point we model the probability of being in any given state over time.
 
@@ -649,7 +644,7 @@ lines(hmm.fit.b$Smax[hmm.fit.b$regime],lwd=2,col='darkred')
 
 In this section, we will provide you with various real spawner-recruit time-series so that you can explore their potential for non-stationarity using the tools from the previous sections.
 
-If you have your own spawner-recruit dataset you want to explore with the different estimation procedures, then all you need is a data-frame with the following specified column headers: *S* (spawner abundance), *logRS* (log(recruits/spawner)), and *by* (brood cohort year).
+If you have your own spawner-recruit dataset you want to explore with the different estimation procedures, then all you need is a data-frame with the following specified column headers: `S` (spawner abundance), `logRS` (log(recruits/spawner)), and `by` (brood cohort year).
 
 ## Fraser Chinook
 
@@ -860,9 +855,6 @@ static_sr_plot(data=df,mod=f1,plot.params=TRUE)
 ```
 
 
-# Overview - Section 2: Non-stationary reference points
-
-The following exercises are intended to give participants a broad understanding of how stable and non-stationary spawner-recruit dynamics influence estimates of biological reference points - and the consequences of these different estimation approaches for stock assessment and management scenarios. We encourage you to modify the R code chunks to experiment with each section to explore the mechanics of the simulations and model testing.
 
 
 # Non-stationary reference points
@@ -883,13 +875,13 @@ The key harvest-based biological reference point is the maximum sustainable harv
 
 $$U_{msy} = 1 - LambertW(e^{1-log(\alpha)})$$
 
-Which can be thought of as the harvest (or exploitation) rate that equivalently produce maximum sustainable yield over the long-term.
+Which can be thought of as the harvest (or exploitation) rate that equivalently produces maximum sustainable yield over the long-term.
 
 First, it may be helpful to visualize how these reference points change with respect to the Ricker parameters generally:
 
 ```{r, smsy and umsy - changing Ricker pars}
 library(samEst)
-log.a=seq(0.1,2,by=0.1) #initial productivity
+log.a=seq(0.1,2,by=0.1)
 smax0=5000
 log.a0=1
 smax=seq(500,500000)
@@ -899,9 +891,9 @@ umsy=umsyCalc(log.a)
 
 par(mfrow=c(2,2))
 plot(smsy.a~log.a,type='l',lwd=2,bty='l',ylab ='Smsy')
-plot(smsy.b~smax,type='l',lwd=2,bty='l',ylab ='Smsy')
-plot(umsy~log.a,type='l',lwd=2,bty='l',ylim=c(0,1))
-plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='Umsy',ylim=c(0,1))
+plot(smsy.b~smax,type='l',lwd=2,bty='l',ylab ='Smsy', xlab ='Smax')
+plot(umsy~log.a,type='l',lwd=2,bty='l',ylim=c(0,1),ylab='Umsy')
+plot(rep(umsyCalc(log.a0),length(smax))~smax,type='l',lwd=2,bty='l',ylab='Umsy', xlab='Smax',ylim=c(0,1))
 ```
 Not that when $S_{max}$ varies, but not $log(\alpha)$, that $U_{msy}$ will not change (as per the formula above).
 
@@ -931,26 +923,15 @@ plot(true.smsy,type='l',lwd=2,ylab='Smsy',xlab='simulation year',ylim=c(min(c(tr
 lines(ns.prod.fit1$Smsy,lwd=2,col='darkred')
 ```
 
-
-As productivity ($log(\alpha)$) declines so too does $S_{msy}$ and $U_{msy}$ (although not linearly, due to their log-scaling), and similarly as $S_{max}$ declines so too does $S_{msy}$ (but not $U_{msy}$, which is only based on ($log(\alpha)$)).
+As productivity ($log(\alpha)$) declines so too does $S_{msy}$ and $U_{msy}$ (although not linearly, due to their log-scaling). Similarly, if $S_{max}$ changes instead, so too does $S_{msy}$ - but not $U_{msy}$, which is only based on $log(\alpha)$.
 
 # Stable and non-stationary harvest control rules
-
-Imagine then how harvest in a salmon fishery may be set based on these reference points. There are a diversity of different 'harvest control rules' that are set for various salmon fisheries throughout the Northeast Paicfic - one commonality is that there is typically a target for exploitation rates based on the returning run size in a given year, as well as a lower limit around which harvest is curtailed to ensure enough fish return to spawn in their natal watersheds to maintain recruitment of future generations (i.e. an escapement goal). Typically, these two quantities - the target rate and escapement goal - will typically be related to estimates of stock-specific reference points: $U_{msy}$ and $S_{msy}$, respectively.
-
-If we then think about how non-stationary versions of these reference points can be translated into a harvest control rule - the result is that these reference points then become 'moving targets' based on estimates from the statistical information in the time-series.
-
-We can visualize a harvest control rule that is fairly common - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental or recreational or First Nations catch), with a harvest target beyond that limit that ramps up toward some fraction of $U_{msy}$ based on the run size - here plotted for 3 different $log(\alpha)$ estimates that may represent change at various time-points (e.g. in this case a decline in productivity).
-
-Key parameters include our standard Ricker spawner-recruit parameters, that influence the reference points that feed into the harvest control rule.
-
-Additionaly, we have tweaks to the exact details of how the harvest control rule relates to the reference points: `U.min` the minimum harvest rate (below the escapement goal), `eg.scalar` - the escapement goal as a fraction of $S_{msy}$ (e.g. 1 = $S_{msy}$), `upper.tar.scalar` - the upper run size where the maximum harvest rate is achieved as a fraction of $S_{msy}$, and `U.scalar` - the maximum harvest rate as a fraction of $U_{msy}$ (e.g. 1 = $U_{msy}$).
 
 Imagine then how harvest in a salmon fishery may be set based on these reference points. There are a diversity of different 'harvest control rules' that are set for various salmon fisheries throughout the North Pacific - one commonality is that there is typically a target for exploitation rates based on the returning run size in a given year, as well as a lower limit around which harvest is curtailed to ensure enough fish return to spawn in their natal watersheds to maintain recruitment of future generations (i.e. an escapement goal). Typically, these two quantities - the target rate and escapement goal - will be influenced by estimates of stock-specific reference points: $U_{msy}$ and $S_{msy}$, respectively.
 
 If we then think about how non-stationary versions of these reference points can be translated into a harvest control rule - the result is that these reference points then become 'moving targets' based on estimates from the statistical information in the spawner-recruit time-series.
 
-We can visualize a harvest control rule that is fairly common - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental, recreational, or Indigeneous fishing rights catch), with a harvest target beyond that limit that ramps up toward some fraction of $U_{msy}$ based on the run size - here plotted for 3 different $log(\alpha)$ estimates that may represent change at various time-points (e.g. in this case a decline in productivity).
+We can visualize a harvest control rule that is fairly common - with a trigger for reduced harvest based on some fraction of $S_{msy}$ representing the escapement goal (below which, we may expect only a limited harvest for e.g. incidental, recreational, or Indigenous fishing rights catch), with a harvest target beyond that limit that ramps up toward some fraction of $U_{msy}$ based on the run size - here plotted for 3 different $log(\alpha)$ estimates that may represent change at various time-points (e.g. in this case a decline in productivity).
 
 Key parameters include our standard Ricker spawner-recruit parameters, that influence the reference points that feed into the harvest control rule through the estimated reference points.
 
@@ -981,7 +962,7 @@ Estimates of these two reference points are not *fixed* in the traditional Ricke
 
 We can explore the potential outcomes of assessing reference points based on non-stationary or traditional forms of the Ricker model in a management-strategy evaluation (or closed-loop simulation. We have created a function for this workshop (`salmon_sim.tv_hcr`) to simulate spawner-recruit dynamics as per the previous simulations, but with harvest now dictated by a simple ramped harvest control rule like what was illustrated in the previous section as well as built-in estimation of Ricker parameters according to the user's chosen estimation model. This recreates the 'loop' between salmon population dynamics, management system, and stock assessment techniques reminiscent of a real world fishery. 
 
-Similar to the visual example in the previous section, you can tune the exact specifics of the harvest control rule. You can specify the maximum harvest target based on some fraction of $U_{msy}$ - according to `U.scalar` (which when set to 1 equals the exact estimate of $U_{msy}$) and the escapement goal trigger based on a fraction of estimated $S_{msy}$ - according to `eg.scalar` (which when set to 1 equals the exact estimate of $S_{msy}$). When run sizes are detected to be below the escapement goal, it will default to a lower scalar on $U_{msy}$ (`U.min`) as a minimum harvest rate. For run sizes above the set escapement goal in a given year, harvest rate will be set up to the maximum harvest target based on the run size relative to the `upper.tar.scalar`, which equals a fraction of estimated $S_{msy}$ (e.g. 2 = double $S_{msy}$), any run sizes beyond this target are simply harvested at the maximum harvest rate. In all cases there are stochastic variations in realized exploitation from the estimated harvest target. 
+Similar to the visual example in the previous section, you can tune the exact specifics of the harvest control rule. You can specify the maximum harvest target based on some fraction of $U_{msy}$ - according to `U.scalar` (which when set to 1 equals the exact estimate of $U_{msy}$) and the escapement goal trigger based on a fraction of estimated $S_{msy}$ - according to `eg.scalar` (which when set to 1 equals the exact estimate of $S_{msy}$). When run sizes are detected to be below the escapement goal, it will default to a minimum harvest rate (`U.min`). For run sizes above the set escapement goal in a given year, harvest rate will scale linearly with run size up to the maximum harvest target according to the `upper.tar.scalar`, which equals a fraction of estimated $S_{msy}$ (e.g. 2 = double $S_{msy}$), any run sizes beyond this target are simply harvested at the previously described maximum harvest rate. In all cases there are stochastic variations in realized exploitation from the estimated harvest target (i.e. outcome uncertainty). 
 
 Within the simulation, reference points can be estimated and set by 3 different types of spawner-recruit models: `stable` (traditional Ricker model), `rw` (random walk variant), or `hmm` (hidden Markov variant), with `hcr.par` dictating what time-varying parameter you wish to allow for the assessment (e.g. `a` for productivity, `b` for capacity, or `both` for the HMM variant). The models will be re-fit to the simulated data every *x* years based on `assess.freq`, with a default of 10 years. For the `rw` and `hmm` model assessments, the calculated reference points are the average of the estimates throughout the assessment period - so if `assess.freq` = 10, then each assessment takes the average of the last 10 years for $U_{msy}$ and $S_{msy}$ as its best estimate for these two model variants. In the case of `hmm` models, this would be the average of the predicted regime sequence and parameters for each regime (e.g. it could be the mean of perhaps 8 estimates of a "low" regime and 2 estimates of a "high" regime over that period).
 
@@ -1030,7 +1011,7 @@ text(x=par('usr')[2]*0.1,y=par('usr')[4]-(par('usr')[4]-par('usr')[3])*0.85,'Non
 
 Notably, the estimated reference points for both the stable and non-stationary Ricker models update to reflect new information as the underlying spawner-recruitment parameters change (to varying success) according to the assessment frequency (i.e. `assess.freq`). The non-stationary forms however tend to react more quickly to these changes (sometimes erroneously, however) given the nature of models and how we apply their estimated reference points (i.e. means of the last generations since the previous assessment).
 
-We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference points are estimated (indicated by the coloured lines) relative to their true simulation reference points (indicated by the ***solid, coloured*** points) in the simulation:
+We can also visualize how this results in different harvest control rules at different time-points in the simulation where the reference points are estimated (indicated by the coloured lines) relative to their true simulation reference points (ie. with x-axis= $S_{msy}$ and y-axis= $U_{msy}$; indicated by the ***solid, coloured*** points) in the simulation as a point of reference:
 
 ```{r, stable and nonstationary hcr, fig.width=6,fig.height=10}
 tp=c(1,round(nrow(mse.prod.st)/2),nrow(mse.prod.st)) #time slice at t=1, half way, final
@@ -1085,7 +1066,7 @@ What trade-offs, if any do you find between basing key management reference poin
 
 Since this previous example only runs a single scenario, and there is significant stochasticity in both the population dynamics and harvest, we can run this function across many iterations to gain more insights into the general behaviour.
 
-Try altering the simulation parameters to other magnitudes or forms of parameter change, and assessment types, to explore how these trade-offs may alter according to the specific simulation scenarios.
+Try altering the simulation parameters to other magnitudes or forms of parameter change, and assessment types, to explore how these trade-offs may alter according to the specific simulation scenarios - you can do this either in the previous section to look at individual outcomes or below to get an understanding of the mean and variability in outcomes under a set of scenario conditions.
 
 ```{r, closed loop sims segment, fig.width=6,fig.height=5,warning=FALSE}
 log.a0=1.5 #initial productivity
