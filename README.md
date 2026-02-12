@@ -1,4 +1,4 @@
-**Materials for the 'Nonstationary spawner-recruitment dynamics for Pacific salmon workshop', February 13, 2026 - 8:30am to 3:30pm - Hyatt Regency Vancouver (Room TBA), Vancouver, BC, Canada.**
+**Materials for the 'Nonstationary spawner-recruitment dynamics for Pacific salmon workshop', February 13, 2026 - 8:30am to 3:30pm - Hyatt Regency Vancouver (Room: Georgia B - 2nd floor), Vancouver, BC, Canada.**
 
 Lead: Dan Greenberg (Fisheries and Oceans Canada - Pacific)
 
