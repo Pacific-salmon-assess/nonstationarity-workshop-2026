@@ -1,0 +1,48 @@
+“answer key”
+2.1 Stable (or static, or equilibrium) dynamics
+How do the estimates compare to the true values in the simulation?
+
+The estimates are (usually) close, but not exact. Sometimes reference points like S_msy are closer than the productivity/capacity parameters.
+
+2.2 
+What do you notice about the temporal patterns in the residuals?
+
+The second residual plot from the static data looks more like white noise. Points jump above the dashed line at 0 pretty randomly. The residuals in the first plot seem similar to each other; they follow a sort of “wavy” path. 
+
+What differences do you find in the Ricker parameter estimates and residual plots for when you account for (or not) autocorrelation in the model?
+
+Parameter estimates can be quite different when accounting for autocorrelation versus not. Usually the autocorrelated model parameter estimates are closer when autocorrelation exists, although sometimes that is not necessarily the case. Typically one should always test for autocorrelation - as its highly prevalent.
+
+Will it detect any autocorrelation in the entirely stable dataset?
+
+A little! It isn’t 0 on the nose usually, and can be negative. This arises from chance.
+
+2.2.1
+What can you conclude from this? Is there more support for a static or autocorrelated model in this autocorrelated simulation?
+
+Autocorrelated fit in the autocorrelated system typically fits much better, with lower AICc and BIC scores
+
+What about when we apply these models in the fully stable system?
+
+The stable fit works better in the same system, but the difference isn’t as large as it was in the previous example - ie. there can be a slight bias towards autocorrelation even if it does not truly exist. 
+
+2.3 Continuous change
+How well does the estimate (red) approximate the true parameter (black) change?
+
+The estimate fits pretty well, but not exact. It isn’t like white noise around the true change. It can be above for quite a few years or below. Note that if the red line is flat it didn’t detect change.
+ 
+Does this track better or worse than the productivity change estimate?
+
+After re-running, it seems like capacity and productivity have fairly equal success at tracking the true changing parameter. 
+
+2.3.2 
+Were you able to correctly identify the true parameter changes based on the model likelihood and selection criteria?
+
+Most of the time, the models are able to successfully discriminate between true changes in productivity or capacity based on likelihood-based model selection criteria. However, run enough times one can find a fair degree of mis-specification - type I error rates
+Yes, just looking for est-prod and est-smax to have most of the AICc weight in the first and 2nd tables, respectively. 
+Exercise 2
+What trade-offs, if any do you find between basing key management reference points in the harvest control rule on either the stable or non-stationary Ricker model estimates?
+You get slightly more catch in the non-stationary HCR? Re-running the coed a few times doesn’t show a clear trend. 
+
+
+
