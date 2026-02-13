@@ -349,7 +349,7 @@ An alternative form of this would allow the capacity parameter ($S_{max}$) to in
 
 $$log(R_t/S_t) = log(\alpha) - S_t/S_{max,t} + \epsilon_t$$
 
-The key challenge in these models is that there are now two sources of variance in year-to-year $log(R_t/S_t)$ that arise from both 'low frequency' (i.e. it changes gradually through time) process error ($\sigma_{\omega}$) and 'high frequency' (i.e. it changes rapidly through time - as 'white noise') annual error ($\sigma_{\omega}$) - the latter of which emerges from both sampling effects (i.e. measurement errors in recruits and spawners) as well as true variances in demographic processes among brood cohorts.
+The key challenge in these models is that there are now two sources of variance in year-to-year $log(R_t/S_t)$ that arise from both 'low frequency' (i.e. it changes gradually through time) process error ($\sigma_{\omega}$) and 'high frequency' (i.e. it changes rapidly through time - as 'white noise') annual error ($\sigma$) - the latter of which emerges from both sampling effects (i.e. measurement errors in recruits and spawners) as well as true variances in demographic processes among brood cohorts.
 
 These nonstationary models can be fit in `samEst` using the `ricker_rw_TMB` or `ricker_rw_stan` functions. To choose between productivity or capacity changes, one must specify the time-varying parameter (`tv.par` as `a` or `b`); one can technically specify `both`, but we discourage this for reasons we will discuss.
 
