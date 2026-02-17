@@ -10,7 +10,7 @@ salmon_sim=function(log.a,smax,sigma,N,form=c('static','autocorr'),rho=NA){
   umsy=samEst::umsyCalc(log.a)
   K = log.a*smax #carrying capacity
   #simulation parameters
-  N=50 #number of simulated years for our spawner-recruit curve
+  N=N #number of simulated years for our spawner-recruit curve
   L=N+A*2 #total simulation length, add 2x max age for starting cohorts to seed the simulation and for final incomplete brood years - these will be dropped later
  
   U=runif(L,umsy*0.25,umsy*1.25) #harvest rate - uniformly drawn with constraints around 25% and 1.25x Umsy
@@ -67,7 +67,7 @@ salmon_sim=function(log.a,smax,sigma,N,form=c('static','autocorr'),rho=NA){
     K = log.a*smax #carrying capacity
     
     #simulation parameters
-    N=50 #number of simulated years for our spawner-recruit curve
+    N=N #number of simulated years for our spawner-recruit curve
     L=N+A*2 #total simulation length, add 2x max age for starting cohorts to seed the simulation and for final incomplete brood years - these will be dropped later
    
     U=runif(L,umsy*0.25,umsy*1.25) #harvest rate - uniformly drawn (you can change this but be careful of exceeding, 0-1 boundaries)
@@ -135,7 +135,7 @@ salmon_sim.tv=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.change,p.
     umsy=samEst::umsyCalc(log.a0)
     K=log.a0*smax0
     #simulation parameters
-    N=50 #number of simulated years for our spawner-recruit curve
+    N=N #number of simulated years for our spawner-recruit curve
     L=N+A*2 #total simulation length, add 2x max age for starting cohorts to seed the simulation and for final incomplete brood years - these will be dropped later
     
     U=runif(L,umsy*0.25,umsy*1.25) #harvest rate - uniformly drawn with constraints around 25% and 1.25x Umsy
@@ -244,7 +244,7 @@ salmon_sim.tv_hcr=function(log.a0,smax0,sigma,N,tv.par=c('a','b','both'),p.chang
   
   K=log.a0*smax0
   #simulation parameters
-  N=50 #number of simulated years for our spawner-recruit curve
+  N=N #number of simulated years for our spawner-recruit curve
   L=N+A*5 #total simulation length, add 4x max age for starting cohorts to seed the simulation and for final incomplete brood years - these will be dropped later
   
   
